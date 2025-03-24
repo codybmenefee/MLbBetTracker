@@ -48,9 +48,19 @@ export async function exportToGoogleSheet(): Promise<Export> {
       url: "/api/recommendations",
     });
     recommendations = response;
+    
+    // Check if we have any recommendations to export
+    if (!recommendations || recommendations.length === 0) {
+      toast({
+        title: "No Recommendations",
+        description: "There are no recommendations to export. Generate recommendations first.",
+        variant: "destructive",
+      });
+      throw new Error("No recommendations to export");
+    }
   } catch (error) {
     console.error("Error fetching recommendations:", error);
-    throw new Error("Failed to fetch recommendations for export");
+    throw error instanceof Error ? error : new Error("Failed to fetch recommendations for export");
   }
 
   // Check if we have the Google Apps Script URL configured for direct export

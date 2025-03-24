@@ -282,18 +282,18 @@ CRITICAL REQUIREMENTS:
       const recommendations = await storage.getRecommendations();
       
       if (recommendations.length === 0) {
-        return res.status(400).json({ message: "No recommendations to export" });
+        // Return a proper 200 status but with a clear message
+        return res.status(200).json({ message: "No recommendations to export" });
       }
       
       // Make sure we're using today's date in the sheet name
       const today = new Date().toISOString().split('T')[0];
-      const sheetName = `MLB Betting Recommendations ${today}`;
+      const sheetName = exportRequest.sheetName || `MLB Betting Recommendations ${today}`;
       
       // Log export details for debugging
-      console.log(`Exporting recommendations to sheet: ${exportRequest.destination}, tab: ${sheetName}`);
+      console.log(`Exporting ${recommendations.length} recommendations to sheet: ${exportRequest.destination}, tab: ${sheetName}`);
       
-      // Call the mock Google Sheets export function
-      // In production, this would use the actual Google Sheets API
+      // Call the Google Sheets export function
       const exportResult = await exportRecommendationsToSheet(
         recommendations,
         exportRequest.destination,
@@ -306,7 +306,7 @@ CRITICAL REQUIREMENTS:
       // Create the export record with the dynamic sheet name
       const exportData = {
         ...exportRequest,
-        sheetName: sheetName, // Override with dynamic sheet name
+        sheetName: sheetName, // Use provided name or the dynamic one
         status: exportStatus,
         exportedData: recommendations,
         errorMessage: exportResult.success ? null : exportResult.message
@@ -322,9 +322,8 @@ CRITICAL REQUIREMENTS:
         message: exportResult.message
       };
 
-      // Return success or error based on the export result
-      const statusCode = exportResult.success ? 201 : 400;
-      res.status(statusCode).json(exportedResult);
+      // Return success regardless of export method to support both direct and server-side methods
+      res.status(201).json(exportedResult);
     } catch (err) {
       handleError(err, res);
     }

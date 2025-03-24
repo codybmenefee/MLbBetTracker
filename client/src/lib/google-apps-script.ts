@@ -17,7 +17,8 @@ import { toast } from "@/hooks/use-toast";
 export async function exportToGoogleAppsScript(
   recommendations: Recommendation[],
   scriptUrl: string,
-  sheetName: string = ""  // Empty default to force using dynamic date in the Apps Script
+  sheetName: string = "",  // Empty default to force using dynamic date in the Apps Script
+  spreadsheetId?: string  // Optional spreadsheet ID for production environments
 ): Promise<{success: boolean, message: string}> {
   try {
     if (!recommendations || recommendations.length === 0) {
@@ -48,6 +49,11 @@ export async function exportToGoogleAppsScript(
       console.log(`Modified URL to ${processedUrl}`);
     }
     
+    // Try to get spreadsheet ID from localStorage if not provided
+    if (!spreadsheetId) {
+      spreadsheetId = localStorage.getItem("googleSpreadsheetId") || undefined;
+    }
+    
     // Prepare the data to send to the Google Apps Script
     const data = {
       recommendations: recommendations.map(rec => ({
@@ -58,7 +64,8 @@ export async function exportToGoogleAppsScript(
         prediction: rec.prediction,
         generatedAt: rec.generatedAt
       })),
-      sheetName: sheetName
+      sheetName: sheetName,
+      spreadsheetId: spreadsheetId
     };
     
     // Make the request to the Google Apps Script

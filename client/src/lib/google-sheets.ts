@@ -16,6 +16,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
   
   // Check for Google Apps Script URL - we'll prioritize direct integration if available
   const appsScriptUrl = localStorage.getItem("googleAppsScriptUrl");
+  const spreadsheetId = localStorage.getItem("googleSpreadsheetId");
   const hasDirectIntegration = appsScriptUrl && isValidGoogleAppsScriptUrl(appsScriptUrl);
   
   // If we have direct integration but no Google Sheets config, create a config with the actual sheet URL
@@ -101,7 +102,8 @@ export async function exportToGoogleSheet(): Promise<Export> {
       directExportResult = await exportToGoogleAppsScript(
         recommendations,
         appsScriptUrl,
-        sheetName
+        sheetName,
+        spreadsheetId
       );
       
       if (directExportResult.success) {

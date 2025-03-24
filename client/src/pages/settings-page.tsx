@@ -355,9 +355,14 @@ function testWithSampleData() {
           
           <CardFooter className="flex justify-between border-t px-6 py-4">
             {savedScriptSettings ? (
-              <p className="text-sm text-green-600 dark:text-green-400">
-                Direct integration configured
-              </p>
+              <div>
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                  Direct integration configured
+                </p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                  Using: {savedScriptSettings}
+                </p>
+              </div>
             ) : (
               <p className="text-sm text-amber-600 dark:text-amber-400">
                 Direct export not configured. Currently using clipboard-based export.

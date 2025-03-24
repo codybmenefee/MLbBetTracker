@@ -12,19 +12,31 @@ import { toast } from "@/hooks/use-toast";
 export async function exportToGoogleSheet(): Promise<Export> {
   // Get the Google Sheets configuration from localStorage
   const configStr = localStorage.getItem("googleSheetsConfig");
-  if (!configStr) {
-    throw new Error("Google Sheets configuration not found. Please configure it in Settings.");
-  }
-
-  const config = JSON.parse(configStr);
+  let config = { googleSheetUrl: "" };
   
-  // Validate Google Sheet URL
-  if (!config.googleSheetUrl) {
-    throw new Error("Google Sheet URL is missing. Please configure it in Settings.");
-  }
+  // Check for Google Apps Script URL - we'll prioritize direct integration if available
+  const appsScriptUrl = localStorage.getItem("googleAppsScriptUrl");
+  const hasDirectIntegration = appsScriptUrl && isValidGoogleAppsScriptUrl(appsScriptUrl);
   
-  if (!config.googleSheetUrl.includes("docs.google.com/spreadsheets")) {
-    throw new Error("Invalid Google Sheets URL. Please enter a valid Google Sheets URL in Settings.");
+  // If we have direct integration but no Google Sheets config, create a default config
+  if (hasDirectIntegration && !configStr) {
+    // Use a default fallback URL for the export record
+    config = { 
+      googleSheetUrl: "https://docs.google.com/spreadsheets/d/YourSpreadsheetUsesDirectIntegration/edit" 
+    };
+  } else if (!configStr) {
+    throw new Error("Google Sheets configuration not found and no Apps Script integration is set up. Please configure in Settings.");
+  } else {
+    config = JSON.parse(configStr);
+    
+    // Basic validation
+    if (!config.googleSheetUrl) {
+      throw new Error("Google Sheet URL is missing. Please configure it in Settings.");
+    }
+    
+    if (!config.googleSheetUrl.includes("docs.google.com/spreadsheets")) {
+      throw new Error("Invalid Google Sheets URL. Please enter a valid Google Sheets URL in Settings.");
+    }
   }
   
   // Get today's date in format 'YYYY-MM-DD'
@@ -63,11 +75,11 @@ export async function exportToGoogleSheet(): Promise<Export> {
     throw error instanceof Error ? error : new Error("Failed to fetch recommendations for export");
   }
 
-  // Check if we have the Google Apps Script URL configured for direct export
-  const appsScriptUrl = localStorage.getItem("googleAppsScriptUrl");
+  // We already checked for the Google Apps Script URL above, no need to fetch it again
+  // Just reuse the hasDirectIntegration variable we already set
   let directExportResult = null;
   
-  if (appsScriptUrl && isValidGoogleAppsScriptUrl(appsScriptUrl) && recommendations.length > 0) {
+  if (hasDirectIntegration && recommendations.length > 0) {
     try {
       // Attempt to export directly via Google Apps Script
       // Always use the dynamic sheet name with today's date

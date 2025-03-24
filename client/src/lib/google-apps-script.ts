@@ -132,41 +132,43 @@ export function showGoogleAppsScriptSetupGuide() {
 export function isValidGoogleAppsScriptUrl(url: string): boolean {
   if (!url) return false;
   
-  // Check if it's in the correct format - must end with /exec
-  const isCorrectFormat = /https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+\/exec$/.test(url);
+  // More flexible format check - should ideally end with /exec but we'll be forgiving
+  // The standard format ends with /exec
+  const isStrictFormat = /https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+\/exec$/.test(url);
   
-  // Try to fix common errors automatically
-  if (!isCorrectFormat) {
-    // Get the base script URL
-    const match = url.match(/https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+/);
-    
-    if (match) {
-      const baseUrl = match[0];
-      
-      // If URL ends with something other than /exec (like /edit, /dev, etc.)
-      if (/\/\w+$/.test(url) && !url.endsWith('/exec')) {
-        console.warn("Google Apps Script URL doesn't end with '/exec'. It might not work correctly.");
-        
-        // If the URL appears to be a library URL (ends with /2, /1, etc.)
-        if (/\/\d+$/.test(url)) {
-          console.warn("This appears to be a Google Script library URL, not a deployed web app URL.");
-        }
-        
-        // Allow non-standard URLs in development to prevent excessive validation errors
-        return true;
-      }
-      
-      // If the URL is missing the /exec entirely
-      else if (baseUrl === url) {
-        console.warn("Google Apps Script URL is missing '/exec' at the end. It will likely not work correctly.");
-        
-        // Allow non-standard URLs in development to prevent excessive validation errors
-        return true;
-      }
-    }
-    
-    console.error("Invalid Google Apps Script URL format. The URL should be from a deployed web app and end with '/exec'");
+  if (isStrictFormat) {
+    return true; // Perfect URL format, no warnings needed
   }
   
-  return isCorrectFormat;
+  // If it's not in the perfect format, try to validate a more general format
+  const match = url.match(/https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+/);
+  
+  if (match) {
+    const baseUrl = match[0]; 
+    
+    // If URL ends with something other than /exec (like /edit, /dev, etc.)
+    if (/\/\w+$/.test(url) && !url.endsWith('/exec')) {
+      console.warn("Google Apps Script URL doesn't end with '/exec'. Auto-correction will be applied when exporting.");
+      
+      // If the URL appears to be a library URL (ends with /2, /1, etc.)
+      if (/\/\d+$/.test(url)) {
+        console.warn("This appears to be a Google Script library URL, not a deployed web app URL, but we'll try to use it.");
+      }
+      
+      // Allow non-standard URLs to prevent excessive validation errors
+      return true;
+    }
+    
+    // If the URL is missing the /exec entirely
+    else if (baseUrl === url) {
+      console.warn("Google Apps Script URL is missing '/exec' at the end. Auto-correction will be applied when exporting.");
+      return true;
+    }
+    
+    // Any other URL that matches the base pattern is also acceptable
+    return true;
+  }
+  
+  console.error("Invalid Google Apps Script URL format. The URL should be from a deployed Google Apps Script web app.");
+  return false;
 }

@@ -225,7 +225,8 @@ export default function SettingsPage() {
  * 1. Open your Google Spreadsheet
  * 2. Go to Extensions > Apps Script
  * 3. Paste this entire script
- * 4. Save and deploy as a web app (Publish > Deploy as web app)
+ * 4. Save and deploy as a web app (Deploy > New deployment)
+ *    - Select type: Web app
  *    - Execute as: Me
  *    - Who has access: Anyone
  * 5. Copy the web app URL for use in your application
@@ -299,30 +300,53 @@ function doPost(e) {
     }
     
     // Return success response
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCORSResponse({
       success: true,
       message: \`Successfully exported \${rows.length} recommendations to sheet "\${sheetName}"\`,
       updatedAt: new Date().toISOString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+    });
     
   } catch (error) {
     // Return error response
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCORSResponse({
       success: false,
       error: error.toString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+    });
   }
 }
 
 // Process HTTP GET requests (for testing)
 function doGet() {
-  return ContentService.createTextOutput(JSON.stringify({
+  return createCORSResponse({
     status: "The API is running",
     instructions: "Send POST requests with recommendation data to use this endpoint"
-  }))
-  .setMimeType(ContentService.MimeType.JSON);
+  });
+}
+
+/**
+ * Helper function to create CORS-enabled responses
+ * This allows the web app to be accessed from any domain
+ */
+function createCORSResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader('Access-Control-Allow-Origin', '*')
+    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+/**
+ * Handle OPTIONS requests for CORS preflight
+ */
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeader('Access-Control-Allow-Origin', '*')
+    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    .setHeader('Access-Control-Max-Age', '3600');
 }
 
 /**

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,19 +12,102 @@ import {
   extractWordDocText
 } from "@/lib/csv-parser";
 import { queryClient } from "@/lib/queryClient";
-import { Upload, ArrowRight, FileText } from "lucide-react";
+import { generateRecommendations } from "@/lib/openai";
+import { 
+  Upload, 
+  ArrowRight, 
+  FileText, 
+  X, 
+  Check, 
+  Loader2, 
+  File, 
+  FileSpreadsheet, 
+  FileText as FileTextIcon 
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { InsertGame, Game } from "@shared/schema";
+
+// Type definition for uploaded files
+interface UploadedFile {
+  id: string;
+  name: string;
+  type: string;
+  timestamp: Date;
+  fileSize: number;
+  gameCount: number;
+}
 
 export default function UploadSchedule() {
   const [dragActive, setDragActive] = useState(false);
   const [processingFile, setProcessingFile] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const { toast } = useToast();
+
+  // Fetch existing games
+  const { data: games } = useQuery<Game[]>({
+    queryKey: ["/api/games"],
+  });
+
+  // Update the uploaded files list when games are fetched
+  useEffect(() => {
+    if (games && games.length > 0) {
+      // Group games by source and create file entries
+      const sourceMap = new Map<string, Game[]>();
+      
+      games.forEach(game => {
+        if (game.source && game.source !== "LLM") {
+          const source = game.source;
+          const existingGames = sourceMap.get(source) || [];
+          sourceMap.set(source, [...existingGames, game]);
+        }
+      });
+      
+      // Convert to uploadedFiles format
+      const files: UploadedFile[] = [];
+      sourceMap.forEach((sourceGames, source) => {
+        // If there are already entries for this source, skip
+        if (uploadedFiles.some(file => file.name === source)) return;
+        
+        // Create a new file entry
+        files.push({
+          id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: source,
+          type: "auto-detected",
+          timestamp: new Date(sourceGames[0].uploadDate),
+          fileSize: 0, // We don't have the actual file size
+          gameCount: sourceGames.length
+        });
+      });
+      
+      if (files.length > 0) {
+        setUploadedFiles(prev => {
+          // Merge new files with existing ones, avoiding duplicates
+          const existingNames = new Set(prev.map(file => file.name));
+          const newFiles = files.filter(file => !existingNames.has(file.name));
+          return [...prev, ...newFiles];
+        });
+      }
+    }
+  }, [games]);
 
   const uploadMutation = useMutation({
     mutationFn: uploadGames,
-    onSuccess: () => {
+    onSuccess: (_, uploadedGames) => {
+      // Create a new uploaded file entry
+      const newFile: UploadedFile = {
+        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: uploadedGames[0].source || "Uploaded Document",
+        type: "csv",
+        timestamp: new Date(),
+        fileSize: 0, // We don't have the actual file size
+        gameCount: uploadedGames.length
+      };
+      
+      setUploadedFiles(prev => [...prev, newFile]);
+      
       toast({
         title: "Success",
-        description: "Schedule uploaded successfully!",
+        description: `Schedule uploaded successfully! ${uploadedGames.length} games imported.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
     },
@@ -32,6 +115,25 @@ export default function UploadSchedule() {
       toast({
         title: "Error",
         description: `Failed to upload schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: generateRecommendations,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Recommendations generated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/recommendations"] });
+      window.location.href = "/recommendations";
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to generate recommendations: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     },
@@ -116,9 +218,9 @@ export default function UploadSchedule() {
           throw new Error("No valid games found in the CSV file");
         }
         
-        // Set the game source to "Uploaded Document"
+        // Set the game source to the file name
         games.forEach(game => {
-          game.source = "Uploaded Document";
+          game.source = file.name;
         });
         
         uploadMutation.mutate(games);
@@ -143,9 +245,9 @@ export default function UploadSchedule() {
         throw new Error("No valid games found in the Word document");
       }
       
-      // Set the game source to "Uploaded Document"
+      // Set the game source to the file name
       games.forEach(game => {
-        game.source = "Uploaded Document";
+        game.source = file.name;
       });
       
       uploadMutation.mutate(games);
@@ -170,9 +272,9 @@ export default function UploadSchedule() {
           throw new Error("No valid games found in the text file");
         }
         
-        // Set the game source to "Uploaded Document"
+        // Set the game source to the file name
         games.forEach(game => {
-          game.source = "Uploaded Document";
+          game.source = file.name;
         });
         
         uploadMutation.mutate(games);
@@ -187,8 +289,29 @@ export default function UploadSchedule() {
     reader.readAsText(file);
   };
 
+  const handleRemoveFile = (fileId: string) => {
+    // In a real app, we'd delete the games from the backend too
+    // For now, just remove from the UI
+    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+    
+    toast({
+      title: "File Removed",
+      description: "File has been removed from the list",
+    });
+  };
+
   const handleGenerateRecommendations = () => {
-    window.location.href = "/recommendations";
+    if (uploadedFiles.length === 0 && (!games || games.length === 0)) {
+      toast({
+        title: "No data available",
+        description: "Please upload a schedule file first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Generate recommendations immediately
+    generateMutation.mutate();
   };
 
   return (
@@ -239,6 +362,41 @@ export default function UploadSchedule() {
             </div>
           </div>
           
+          {/* Display uploaded files */}
+          {uploadedFiles.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium mb-2">Uploaded Files:</h3>
+              <div className="flex flex-wrap gap-2">
+                {uploadedFiles.map(file => (
+                  <div 
+                    key={file.id}
+                    className="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm"
+                  >
+                    {file.name.toLowerCase().endsWith('.csv') ? (
+                      <FileSpreadsheet className="w-4 h-4 text-blue-600 mr-2" />
+                    ) : file.name.toLowerCase().endsWith('.docx') ? (
+                      <FileText className="w-4 h-4 text-blue-600 mr-2" />
+                    ) : (
+                      <File className="w-4 h-4 text-blue-600 mr-2" />
+                    )}
+                    <span className="mr-2 text-blue-900">{file.name}</span>
+                    <Badge variant="outline" className="bg-blue-100 mr-2">
+                      {file.gameCount} games
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 rounded-full"
+                      onClick={() => handleRemoveFile(file.id)}
+                    >
+                      <X className="h-3 w-3 text-gray-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div className="flex flex-col sm:flex-row items-center">
             <Button
               variant="link"
@@ -250,11 +408,20 @@ export default function UploadSchedule() {
             
             <Button 
               onClick={handleGenerateRecommendations}
-              disabled={uploadMutation.isPending}
+              disabled={uploadMutation.isPending || generateMutation.isPending}
               className="mt-3 sm:mt-0"
             >
-              Generate Recommendations
-              <ArrowRight className="w-5 h-5 ml-2" />
+              {generateMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  Generate Recommendations
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
@@ -269,8 +436,8 @@ export default function UploadSchedule() {
             <li>CSV files: Include team names, start times, and odds in structured format</li>
             <li>Word/Text files: Include game matchups in "Team A vs Team B" format, one per line</li>
             <li>The system supports up to 15 games per day</li>
-            <li>For all file types, uploaded games will be marked as from "Uploaded Document"</li>
-            <li>For detailed instructions, visit the Help page</li>
+            <li>For all file types, uploaded files will be shown above and can be removed if needed</li>
+            <li>Click "Generate Recommendations" after uploading to process your data</li>
           </ul>
         </CardContent>
       </Card>

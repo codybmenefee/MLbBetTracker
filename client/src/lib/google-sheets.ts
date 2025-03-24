@@ -25,16 +25,12 @@ export async function exportToGoogleSheet(): Promise<Export> {
     // Format: https://script.google.com/macros/s/[ID]/exec
     // We need to extract just the base script URL and try to determine the sheet URL
     
-    // First, prompt user to actually view the spreadsheet directly
+    // We don't need to open the script URL directly anymore, just show a toast
     toast({
-      title: "Opening Google Spreadsheet",
-      description: "When using direct integration, you need to open the spreadsheet directly instead of through this app.",
+      title: "Using Google Apps Script Integration",
+      description: "Your data will be sent directly to your Google Sheet using the Apps Script integration.",
       duration: 5000,
     });
-    
-    // Open the Apps Script URL in a new tab - 
-    // This will trigger the doGet function which should show usage instructions
-    window.open(appsScriptUrl, "_blank");
     
     // For tracking purposes, still store a record with a special URL
     config = { 

@@ -7,7 +7,6 @@ import Sidebar from "@/components/layout/sidebar";
 import SchedulePage from "@/pages/schedule-page";
 import RecommendationsPage from "@/pages/recommendations-page";
 import LogsPage from "@/pages/logs-page";
-import HelpPage from "@/pages/help-page";
 import SettingsPage from "@/pages/settings-page";
 
 function Router() {
@@ -20,7 +19,6 @@ function Router() {
           <Route path="/recommendations" component={RecommendationsPage} />
           <Route path="/logs" component={LogsPage} />
           <Route path="/settings" component={SettingsPage} />
-          <Route path="/help" component={HelpPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

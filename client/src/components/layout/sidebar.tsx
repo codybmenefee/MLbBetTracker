@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { CalendarDays, Sparkles, FolderOpen, HelpCircle, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, Sparkles, FolderOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
@@ -12,7 +12,6 @@ export default function Sidebar() {
     { path: "/recommendations", label: "AI Recommendations", icon: Sparkles },
     { path: "/logs", label: "View Logs", icon: FolderOpen },
     { path: "/settings", label: "Settings", icon: Settings },
-    { path: "/help", label: "Help", icon: HelpCircle },
   ];
 
   return (

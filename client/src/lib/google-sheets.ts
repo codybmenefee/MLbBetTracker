@@ -1,7 +1,9 @@
 import { apiRequest } from "./queryClient";
 import { queryClient } from "./queryClient";
-import { Export, InsertExport } from "@shared/schema";
+import { Export, InsertExport, Recommendation } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
+import { exportToGoogleAppsScript, isValidGoogleAppsScriptUrl } from "./google-apps-script";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Exports the current recommendations to a Google Sheet
@@ -32,7 +34,57 @@ export async function exportToGoogleSheet(): Promise<Export> {
     status: "pending"
   };
 
-  // Call the API to create a new export
+  // Get recommendations to export
+  let recommendations: Recommendation[] = [];
+  try {
+    const response = await apiRequest<Recommendation[]>({
+      method: "GET",
+      url: "/api/recommendations",
+    });
+    recommendations = response;
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    throw new Error("Failed to fetch recommendations for export");
+  }
+
+  // Check if we have the Google Apps Script URL configured for direct export
+  const appsScriptUrl = localStorage.getItem("googleAppsScriptUrl");
+  let directExportResult = null;
+  
+  if (appsScriptUrl && isValidGoogleAppsScriptUrl(appsScriptUrl) && recommendations.length > 0) {
+    try {
+      // Attempt to export directly via Google Apps Script
+      directExportResult = await exportToGoogleAppsScript(
+        recommendations,
+        appsScriptUrl,
+        config.googleSheetName || "MLB Betting Recommendations"
+      );
+      
+      if (directExportResult.success) {
+        toast({
+          title: "Direct Export Successful",
+          description: directExportResult.message,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Direct Export Failed",
+          description: directExportResult.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error in direct export:", error);
+      toast({
+        title: "Direct Export Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  }
+
+  // Always call the API to create a new export record (even if direct export was attempted)
+  // This ensures we maintain a history of exports in our system
   const response = await apiRequest<Export>({
     method: "POST",
     url: "/api/exports",

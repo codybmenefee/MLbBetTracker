@@ -1,9 +1,9 @@
-import UploadSchedule from "@/components/upload-schedule";
+import LiveOddsDashboard from "@/components/live-odds-dashboard";
 
 export default function SchedulePage() {
   return (
     <section>
-      <UploadSchedule />
+      <LiveOddsDashboard />
     </section>
   );
 }

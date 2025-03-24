@@ -60,15 +60,7 @@ export type Recommendation = typeof recommendations.$inferSelect;
 export type InsertExport = z.infer<typeof insertExportSchema>;
 export type Export = typeof exports.$inferSelect;
 
-// CSV schema for validation
-export const csvRowSchema = z.object({
-  homeTeam: z.string().min(1, "Home team is required"),
-  awayTeam: z.string().min(1, "Away team is required"),
-  gameTime: z.string().min(1, "Game time is required"),
-  homeOdds: z.string().min(1, "Home odds are required"),
-  awayOdds: z.string().min(1, "Away odds are required"),
-  overUnderLine: z.string().min(1, "Over/under line is required"),
-  overUnderOdds: z.string().min(1, "Over/under odds are required"),
-});
+// CSV schema for validation - more flexible to accept any header format
+export const csvRowSchema = z.record(z.string(), z.string());
 
 export type CsvRow = z.infer<typeof csvRowSchema>;

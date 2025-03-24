@@ -105,25 +105,45 @@ For each recommendation, provide:
 4. Confidence (as a percentage from 1-100%)
 5. Prediction (simple outcome like "Team A Win", "Over", "Team B Cover")
 
-Return your recommendations as a JSON array with exactly 5 objects, each with the fields:
-- game (string)
-- betType (string)
-- odds (string)
-- confidence (number between 1-100)
-- prediction (string)
+Return your recommendations in exactly this JSON format, with no deviations:
+{
+  "recommendations": [
+    {
+      "game": "Team A vs. Team B",
+      "betType": "Moneyline",
+      "odds": "+150",
+      "confidence": 75,
+      "prediction": "Team A Win"
+    },
+    ... (more recommendations)
+  ]
+}
 
-Important: 
-- Only respond with valid JSON. Do not include any explanations.
-- For confidence levels, only use integer values.
-- For odds, include the +/- sign.
-- Only recommend up to 5 games.
+CRITICAL REQUIREMENTS:
+- You MUST respond with valid JSON only. No explanations or text outside the JSON.
+- Your response must follow the exact format shown above.
+- "recommendations" must be an array with exactly 5 objects.
+- Each recommendation must have exactly these fields: game, betType, odds, confidence, prediction.
+- "confidence" must be an integer between 1-100.
+- "odds" must include the +/- sign (e.g., "+150" or "-180").
+- Do not deviate from this format in any way.
 `;
 
-      // Call OpenAI API
+      // Call OpenAI API with strict JSON output format
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
+        messages: [
+          { 
+            role: "system", 
+            content: "You are a sports betting analyst that provides recommendations in precise JSON format. Never include explanations or any text outside of the JSON structure." 
+          },
+          { 
+            role: "user", 
+            content: prompt 
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7
       });
 
       const content = response.choices[0].message.content;
@@ -132,10 +152,31 @@ Important:
         return res.status(500).json({ message: "Failed to generate recommendations from OpenAI" });
       }
 
-      const recommendationsData = JSON.parse(content);
-      
-      if (!Array.isArray(recommendationsData.recommendations)) {
-        return res.status(500).json({ message: "Invalid response format from OpenAI" });
+      let recommendationsData;
+      try {
+        recommendationsData = JSON.parse(content);
+        
+        if (!recommendationsData.recommendations || !Array.isArray(recommendationsData.recommendations) || recommendationsData.recommendations.length === 0) {
+          throw new Error("Invalid response format: missing or empty recommendations array");
+        }
+        
+        // Validate each recommendation structure
+        for (const rec of recommendationsData.recommendations) {
+          if (!rec.game || !rec.betType || !rec.odds || rec.confidence === undefined || !rec.prediction) {
+            throw new Error("Invalid recommendation format: missing required fields");
+          }
+          
+          if (typeof rec.confidence !== 'number' || rec.confidence < 1 || rec.confidence > 100) {
+            throw new Error("Invalid confidence value: must be a number between 1-100");
+          }
+          
+          if (typeof rec.odds !== 'string' || !/^[+-]/.test(rec.odds)) {
+            throw new Error("Invalid odds format: must be a string with +/- prefix");
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing OpenAI response:", error, content);
+        return res.status(500).json({ message: "Invalid response format from OpenAI: " + error.message });
       }
 
       // Validate and save recommendations

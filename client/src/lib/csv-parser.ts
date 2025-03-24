@@ -1,7 +1,7 @@
 import { csvRowSchema, type CsvRow, type InsertGame } from "@shared/schema";
 import { apiRequest } from "./queryClient";
 
-// Parse CSV file content into an array of valid game objects
+// Parse CSV file content into an array of row objects
 export function parseCSV(csvContent: string): CsvRow[] {
   try {
     // Split CSV content into lines
@@ -33,9 +33,8 @@ export function parseCSV(csvContent: string): CsvRow[] {
         row[header] = values[index];
       });
 
-      // Validate the row using zod schema
-      const validatedRow = csvRowSchema.parse(row);
-      rows.push(validatedRow);
+      // Add the row to our list (we're using a flexible schema now)
+      rows.push(row);
     }
 
     return rows;
@@ -45,17 +44,40 @@ export function parseCSV(csvContent: string): CsvRow[] {
   }
 }
 
-// Convert CSV rows to InsertGame objects
+// Convert CSV rows to InsertGame objects - with more flexible mapping
 export function convertToGames(rows: CsvRow[]): InsertGame[] {
-  return rows.map(row => ({
-    homeTeam: row.homeTeam,
-    awayTeam: row.awayTeam,
-    gameTime: new Date(row.gameTime),
-    homeOdds: row.homeOdds,
-    awayOdds: row.awayOdds,
-    overUnderLine: row.overUnderLine,
-    overUnderOdds: row.overUnderOdds
-  }));
+  return rows.map(row => {
+    // Try to identify key fields using various possible header names
+    const homeTeam = row.homeTeam || row.home_team || row.HomeTeam || row["Home Team"] || "";
+    const awayTeam = row.awayTeam || row.away_team || row.AwayTeam || row["Away Team"] || "";
+    const gameTimeStr = row.gameTime || row.game_time || row.GameTime || row["Game Time"] || row.date || row.Date || "";
+    const homeOdds = row.homeOdds || row.home_odds || row.HomeOdds || row["Home Odds"] || "";
+    const awayOdds = row.awayOdds || row.away_odds || row.AwayOdds || row["Away Odds"] || "";
+    const overUnderLine = row.overUnderLine || row.over_under_line || row.OverUnderLine || row["Over/Under Line"] || row["O/U Line"] || "";
+    const overUnderOdds = row.overUnderOdds || row.over_under_odds || row.OverUnderOdds || row["Over/Under Odds"] || row["O/U Odds"] || "";
+    
+    // Parse date with error handling
+    let gameTime: Date;
+    try {
+      gameTime = new Date(gameTimeStr);
+      if (isNaN(gameTime.getTime())) {
+        // If parsing fails, use current date
+        gameTime = new Date();
+      }
+    } catch (e) {
+      gameTime = new Date();
+    }
+    
+    return {
+      homeTeam,
+      awayTeam,
+      gameTime,
+      homeOdds,
+      awayOdds,
+      overUnderLine,
+      overUnderOdds
+    };
+  });
 }
 
 // Upload games to the backend

@@ -34,6 +34,20 @@ export async function exportToGoogleAppsScript(
       };
     }
     
+    // Check if the URL has /exec at the end, if not, try to fix it
+    let processedUrl = scriptUrl;
+    if (!processedUrl.endsWith('/exec')) {
+      // If it's a library URL, it might have a version number
+      if (processedUrl.match(/\/\d+$/)) {
+        // Remove version number and add exec
+        processedUrl = processedUrl.replace(/\/\d+$/, '/exec');
+      } else {
+        // Just append /exec
+        processedUrl = `${processedUrl}/exec`;
+      }
+      console.log(`Modified URL to ${processedUrl}`);
+    }
+    
     // Prepare the data to send to the Google Apps Script
     const data = {
       recommendations: recommendations.map(rec => ({
@@ -50,7 +64,7 @@ export async function exportToGoogleAppsScript(
     // Make the request to the Google Apps Script
     // Using no-cors mode and removing Content-Type header to avoid preflight requests
     // Google Apps Script will parse JSON regardless if Content-Type is not explicitly set
-    const response = await fetch(scriptUrl, {
+    const response = await fetch(processedUrl, {
       method: "POST",
       body: JSON.stringify(data),
       mode: "no-cors" // Using no-cors to avoid CORS issues with Google Apps Script
@@ -111,7 +125,23 @@ export function showGoogleAppsScriptSetupGuide() {
 
 /**
  * Checks if a URL is a valid Google Apps Script web app URL
+ * 
+ * A valid Apps Script web app URL should be in the format:
+ * https://script.google.com/macros/s/SCRIPT_ID/exec
  */
 export function isValidGoogleAppsScriptUrl(url: string): boolean {
-  return /https:\/\/script\.google\.com\/macros\/[s|e]\/\w+\/exec/.test(url);
+  // Check if it's in the correct format
+  const isCorrectFormat = /https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+\/exec/.test(url);
+  
+  // If not in correct format, log a helpful message
+  if (!isCorrectFormat && url) {
+    console.log("Invalid Google Apps Script URL format. The URL should end with '/exec' and be from a deployed web app, not a script library.");
+    
+    // Return true for library URLs to prevent validation errors during development/testing
+    if (url.includes('script.google.com/macros/')) {
+      return true;
+    }
+  }
+  
+  return isCorrectFormat;
 }

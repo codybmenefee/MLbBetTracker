@@ -27,7 +27,7 @@ const appsScriptFormSchema = z.object({
     .trim()
     .min(1, "Google Apps Script URL is required")
     .refine(isValidGoogleAppsScriptUrl, {
-      message: "Must be a valid Google Apps Script URL (e.g., https://script.google.com/macros/s/...)"
+      message: "Must be a valid Google Apps Script URL that ends with '/exec' (e.g., https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec)"
     })
 });
 
@@ -207,6 +207,37 @@ export default function SettingsPage() {
                       >
                         View setup instructions
                       </Button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md p-4 mb-6">
+                <div className="flex items-start">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    className="text-amber-500 mr-2 mt-0.5"
+                  >
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Important: URL Format</h4>
+                    <p className="text-sm text-muted-foreground">
+                      The Apps Script URL <strong>must end with /exec</strong> to work properly. It should look like:
+                      <code className="block bg-amber-100 dark:bg-amber-900 p-1 mt-1 rounded">
+                        https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
+                      </code>
+                      If you're seeing a Google login screen, your URL may be incorrect or the script may not be deployed as a web app.
                     </p>
                   </div>
                 </div>

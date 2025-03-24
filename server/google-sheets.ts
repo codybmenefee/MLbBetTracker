@@ -29,9 +29,10 @@ export async function exportRecommendationsToSheet(
     }
 
     // Initialize the Sheets API client
+    const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON || '{}');
     const auth = new google.auth.GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-      keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS
+      credentials
     });
 
     const sheets = google.sheets({ version: 'v4', auth });

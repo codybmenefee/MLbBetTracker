@@ -17,7 +17,7 @@ import { toast } from "@/hooks/use-toast";
 export async function exportToGoogleAppsScript(
   recommendations: Recommendation[],
   scriptUrl: string,
-  sheetName: string = "MLB Recommendations"
+  sheetName: string = ""  // Empty default to force using dynamic date in the Apps Script
 ): Promise<{success: boolean, message: string}> {
   try {
     if (!recommendations || recommendations.length === 0) {

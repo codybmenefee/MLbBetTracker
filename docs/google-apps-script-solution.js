@@ -28,7 +28,10 @@ function doPost(e) {
     
     // Get the active spreadsheet and sheet (or create a new sheet)
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = data.sheetName || "MLB Recommendations";
+    
+    // Use today's date for the sheet name if not provided
+    const today = new Date().toISOString().split('T')[0];
+    const sheetName = data.sheetName || `MLB Betting Recommendations ${today}`;
     
     // Try to get the sheet if it exists, otherwise create it
     let sheet = ss.getSheetByName(sheetName);

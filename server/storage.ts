@@ -13,6 +13,7 @@ export interface IStorage {
   // Recommendation operations
   getRecommendations(): Promise<Recommendation[]>;
   createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation>;
+  clearRecommendations(): Promise<void>;
   createRecommendations(recommendations: InsertRecommendation[]): Promise<Recommendation[]>;
   
   // Export operations
@@ -79,7 +80,16 @@ export class MemStorage implements IStorage {
     return newRecommendation;
   }
 
+  async clearRecommendations(): Promise<void> {
+    this.recommendationsData.clear();
+    // Reset the ID counter to ensure clean numbering with each new batch
+    this.recommendationId = 1;
+  }
+
   async createRecommendations(recommendationsArray: InsertRecommendation[]): Promise<Recommendation[]> {
+    // Clear existing recommendations
+    await this.clearRecommendations();
+    
     const createdRecommendations: Recommendation[] = [];
     for (const recommendation of recommendationsArray) {
       const createdRecommendation = await this.createRecommendation(recommendation);

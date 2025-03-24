@@ -1,0 +1,108 @@
+Project Name: MLB Betting Tracker – Live Odds Integration
+Client: Matt May
+Consultant: Cody Menefee (Modern Strategy, LLC)
+Date: March 24, 2025
+Stage: Contract 2 – API Automation Upgrade
+API Provider: The Odds API
+
+🎯 Objective
+Expand the current POC to include real-time game and odds data, removing the need for manual game uploads. This will allow GPT to generate accurate, up-to-date betting recommendations each day, fully automated.
+
+🔧 Key Features
+1. Odds API Integration
+Connect to The Odds API (v4) to pull:
+
+Today’s MLB games
+
+Team matchups
+
+Start times
+
+Moneyline odds (U.S. sportsbooks: FanDuel, DraftKings, etc.)
+
+Use the /v4/sports/baseball_mlb/odds/ endpoint
+
+Region: us, Market: h2h (head-to-head)
+
+2. Automated Daily Fetch
+System should auto-fetch odds each day at a set time (e.g. 7 AM ET)
+
+Fallback logic if API rate limits or downtime occur
+
+Parse and format the game data for GPT prompts
+
+3. Prompt Integration
+Inject fetched game data into the ChatGPT prompt to guide bet recommendation generation
+
+Continue to produce structured JSON output as in the POC
+
+4. Google Sheet Logging
+Maintain existing logging structure in the Google Sheet
+
+Ensure odds from API appear alongside each generated bet
+
+📂 Data Flow
+Scheduler or Manual Trigger → Fetch games from The Odds API
+
+Parse API Response → Format into game objects for GPT prompt
+
+Call ChatGPT → Generate structured recommendations (with embedded odds)
+
+Log Output → Google Sheet as individual entries
+
+Frontend → Display daily picks + odds
+
+🧪 Test Case Example
+API Response Sample:
+
+json
+Copy
+Edit
+{
+  "teams": ["Yankees", "Red Sox"],
+  "commence_time": "2025-03-24T17:10:00Z",
+  "bookmakers": [{
+    "title": "DraftKings",
+    "markets": [{
+      "outcomes": [
+        {"name": "Yankees", "price": -110},
+        {"name": "Red Sox", "price": +100}
+      ]
+    }]
+  }]
+}
+GPT Prompt Fragment:
+
+"Today's matchup is Yankees vs. Red Sox. Odds from DraftKings: Yankees -110, Red Sox +100. Please generate a betting recommendation in structured JSON format..."
+
+📝 Assumptions
+The client will provide their API key for The Odds API OR use temporary shared credentials via Modern Strategy
+
+Usage will remain under free tier limits initially (500 requests/month)
+
+GPT will still "reason" based on odds but will not have insider knowledge on injuries, trends, etc. unless explicitly included
+
+🚧 Out of Scope
+Injuries, team trends, weather (can be added in later contracts with new APIs)
+
+Frontend redesign (available as a separate add-on)
+
+Multi-league support (focus is on MLB preseason only for now)
+
+📅 Timeline & Cost
+Estimated Time: 2–3 days
+Cost: $150 fixed-price contract on Upwork
+
+✅ Deliverables
+Live API integration with The Odds API
+
+Fully automated daily GPT prompt using real data
+
+Updated codebase
+
+Working deployment (Replit or hosted option)
+
+Updated README.md with new flow
+
+Optional short walkthrough video
+

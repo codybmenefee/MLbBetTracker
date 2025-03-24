@@ -27,10 +27,13 @@ export async function exportToGoogleSheet(): Promise<Export> {
     throw new Error("Invalid Google Sheets URL. Please enter a valid Google Sheets URL in Settings.");
   }
   
+  // Get today's date in format 'YYYY-MM-DD'
+  const today = new Date().toISOString().split('T')[0];
+  
   // Prepare the export request data
   const exportData: InsertExport = {
     destination: config.googleSheetUrl,
-    sheetName: config.googleSheetName || "MLB Betting Recommendations",
+    sheetName: config.googleSheetName || `MLB Betting Recommendations ${today}`,
     status: "pending"
   };
 
@@ -57,7 +60,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
       directExportResult = await exportToGoogleAppsScript(
         recommendations,
         appsScriptUrl,
-        config.googleSheetName || "MLB Betting Recommendations"
+        config.googleSheetName || `MLB Betting Recommendations ${today}`
       );
       
       if (directExportResult.success) {

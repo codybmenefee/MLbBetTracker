@@ -17,6 +17,7 @@ function doPost(e) {
     // Parse the JSON data sent from your application
     const data = JSON.parse(e.postData.contents);
     const recommendations = data.recommendations;
+    const spreadsheetId = data.spreadsheetId; // Get the spreadsheet ID from the request
     
     if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
       return ContentService.createTextOutput(JSON.stringify({
@@ -26,8 +27,33 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
     }
     
-    // Get the active spreadsheet and sheet (or create a new sheet)
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    // Get the spreadsheet by ID if provided, otherwise use active spreadsheet
+    let ss;
+    if (spreadsheetId) {
+      try {
+        ss = SpreadsheetApp.openById(spreadsheetId);
+      } catch (error) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: `Could not open spreadsheet with ID ${spreadsheetId}: ${error.toString()}`
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+      }
+    } else {
+      // Fallback to active spreadsheet if no ID provided
+      try {
+        ss = SpreadsheetApp.getActiveSpreadsheet();
+        if (!ss) {
+          throw new Error("No active spreadsheet found and no spreadsheet ID provided");
+        }
+      } catch (error) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: `No spreadsheet available: ${error.toString()}`
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
     
     // Use today's date for the sheet name if not provided
     const today = new Date().toISOString().split('T')[0];
@@ -102,12 +128,16 @@ function doPost(e) {
 
 // Process HTTP GET requests - shows a helpful info page when users visit the script URL
 function doGet() {
-  // Get the active spreadsheet URL to help users
+  // Get the active spreadsheet URL and ID to help users
   let spreadsheetUrl = "";
+  let spreadsheetId = "";
   try {
-    spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    spreadsheetUrl = ss.getUrl();
+    spreadsheetId = ss.getId();
   } catch (e) {
     spreadsheetUrl = "Unable to determine spreadsheet URL. Make sure you're running this script from your Google Sheet.";
+    spreadsheetId = "Unable to determine spreadsheet ID.";
   }
   
   // Create a simple HTML page with instructions and the spreadsheet link
@@ -120,9 +150,21 @@ function doGet() {
           h1 { color: #4285F4; }
           .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
           .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+          .warning { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
           a { color: #4285F4; }
           code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+          .copy-button { background-color: #4285F4; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+          .id-box { background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; border: 1px solid #ddd; }
         </style>
+        <script>
+          function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+              alert('Spreadsheet ID copied to clipboard!');
+            }, function() {
+              alert('Failed to copy. Please select and copy the ID manually.');
+            });
+          }
+        </script>
       </head>
       <body>
         <h1>MLB Betting Recommendations - Google Apps Script</h1>
@@ -134,6 +176,15 @@ function doGet() {
         <div class="info">
           <strong>Your Google Spreadsheet:</strong><br>
           <a href="${spreadsheetUrl}" target="_blank">${spreadsheetUrl}</a>
+        </div>
+        
+        <div class="warning">
+          <strong>IMPORTANT: Spreadsheet ID Required</strong>
+          <p>To use this script in production, you must provide your Spreadsheet ID in the Settings of the MLB Betting app.</p>
+          <p>Your Spreadsheet ID is:</p>
+          <div class="id-box" id="spreadsheetId">${spreadsheetId}</div>
+          <button class="copy-button" onclick="copyToClipboard('${spreadsheetId}')">Copy ID</button>
+          <p>Add this ID to the <strong>Spreadsheet ID</strong> field in your app's Settings page, along with the Apps Script URL.</p>
         </div>
         
         <h2>How this works:</h2>
@@ -149,6 +200,7 @@ function doGet() {
           <li>The actual data transfer happens through POST requests from the application</li>
           <li>A new sheet tab will be created for each day's recommendations (format: <code>MLB Betting Recommendations YYYY-MM-DD</code>)</li>
           <li>If you encounter any issues, you can check the Execution Log in the Apps Script editor</li>
+          <li><strong>The Spreadsheet ID is required</strong> for the integration to work properly in production</li>
         </ul>
         
         <p>Return to your MLB Betting Recommendations application to continue.</p>
@@ -166,6 +218,15 @@ function doGet() {
 function testWithSampleData() {
   // Use today's date for the test sheet name
   const today = new Date().toISOString().split('T')[0];
+  
+  // Try to get the current spreadsheet ID
+  let currentSpreadsheetId = "";
+  try {
+    currentSpreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  } catch (e) {
+    Logger.log("Could not get active spreadsheet ID, using test ID instead");
+    currentSpreadsheetId = "REPLACE_WITH_YOUR_SPREADSHEET_ID"; // Users should replace this with their actual ID
+  }
   
   const sampleData = {
     recommendations: [
@@ -186,6 +247,7 @@ function testWithSampleData() {
         generatedAt: new Date().toISOString()
       }
     ],
+    spreadsheetId: currentSpreadsheetId, // Include the spreadsheet ID
     sheetName: `MLB Betting Recommendations ${today}`
   };
   

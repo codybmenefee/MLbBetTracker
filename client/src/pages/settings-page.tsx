@@ -22,13 +22,19 @@ const appsScriptFormSchema = z.object({
         message: "Must be a valid Google Apps Script web app URL (should end with /exec)" 
       }
     ),
+  googleSpreadsheetId: z
+    .string()
+    .min(20, "Spreadsheet ID must be at least 20 characters long")
+    .max(100, "Spreadsheet ID seems too long, please check it")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Spreadsheet ID should only contain letters, numbers, underscores, and hyphens")
+    .optional(),
 });
 
 type AppsScriptFormValues = z.infer<typeof appsScriptFormSchema>;
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [savedScriptSettings, setSavedScriptSettings] = useState<string | null>(null);
+  const [savedScriptSettings, setSavedScriptSettings] = useState<{url: string, spreadsheetId?: string} | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Form for Google Apps Script configuration
@@ -36,6 +42,7 @@ export default function SettingsPage() {
     resolver: zodResolver(appsScriptFormSchema),
     defaultValues: {
       googleAppsScriptUrl: "",
+      googleSpreadsheetId: "",
     },
   });
 
@@ -43,9 +50,18 @@ export default function SettingsPage() {
   useEffect(() => {
     // Load Google Apps Script URL
     const savedAppScriptUrl = localStorage.getItem("googleAppsScriptUrl");
+    const savedSpreadsheetId = localStorage.getItem("googleSpreadsheetId");
+    
     if (savedAppScriptUrl) {
-      setSavedScriptSettings(savedAppScriptUrl);
-      scriptForm.reset({ googleAppsScriptUrl: savedAppScriptUrl });
+      setSavedScriptSettings({ 
+        url: savedAppScriptUrl, 
+        spreadsheetId: savedSpreadsheetId || undefined 
+      });
+      
+      scriptForm.reset({ 
+        googleAppsScriptUrl: savedAppScriptUrl,
+        googleSpreadsheetId: savedSpreadsheetId || "",
+      });
     }
   }, [scriptForm]);
 

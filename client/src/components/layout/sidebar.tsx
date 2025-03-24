@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { CalendarDays, Sparkles, FolderOpen, HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, Sparkles, FolderOpen, HelpCircle, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
@@ -11,6 +11,7 @@ export default function Sidebar() {
     { path: "/", label: "Today's Schedule", icon: CalendarDays },
     { path: "/recommendations", label: "AI Recommendations", icon: Sparkles },
     { path: "/logs", label: "View Logs", icon: FolderOpen },
+    { path: "/settings", label: "Settings", icon: Settings },
     { path: "/help", label: "Help", icon: HelpCircle },
   ];
 
@@ -41,9 +42,9 @@ export default function Sidebar() {
       <nav className="p-2">
         {navItems.map((item) => (
           <Link key={item.path} href={item.path}>
-            <a 
+            <div 
               className={cn(
-                "flex items-center p-3 mb-1 rounded-md",
+                "flex items-center p-3 mb-1 rounded-md cursor-pointer",
                 location === item.path 
                   ? "bg-blue-100 text-primary" 
                   : "text-neutral hover:bg-blue-50"
@@ -56,7 +57,7 @@ export default function Sidebar() {
               )}>
                 {item.label}
               </span>
-            </a>
+            </div>
           </Link>
         ))}
       </nav>

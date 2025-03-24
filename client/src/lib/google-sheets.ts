@@ -1,35 +1,66 @@
 import { apiRequest } from "./queryClient";
-import type { Export } from "@shared/schema";
+import { queryClient } from "./queryClient";
+import { Export, InsertExport } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 
-// Export recommendations to Google Sheets via the backend
+/**
+ * Exports the current recommendations to a Google Sheet
+ * Using the configuration stored in localStorage
+ */
 export async function exportToGoogleSheet(): Promise<Export> {
+  // Get the Google Sheets configuration from localStorage
+  const configStr = localStorage.getItem("googleSheetsConfig");
+  if (!configStr) {
+    throw new Error("Google Sheets configuration not found. Please configure it in Settings.");
+  }
+
+  const config = JSON.parse(configStr);
+  
+  // Prepare the export request data
+  const exportData: InsertExport = {
+    exportDate: new Date().toISOString(),
+    destination: config.googleSheetUrl,
+    sheetName: config.googleSheetName || "MLB Betting Recommendations",
+    status: "pending"
+  };
+
+  // Call the API to create a new export
+  const response = await apiRequest<Export>({
+    method: "POST",
+    url: "/api/exports",
+    body: exportData,
+  });
+
+  // Invalidate exports cache
+  queryClient.invalidateQueries({ queryKey: ["/api/exports"] });
+  
+  return response;
+}
+
+/**
+ * Gets the latest export record from the API
+ */
+export async function getLatestExport(): Promise<Export | null> {
   try {
-    const response = await apiRequest(
-      "POST", 
-      "/api/exports", 
-      { 
-        // The backend will handle creating a valid Google Sheet URL
-        // In a real implementation, this might include OAuth token or other authentication
-        sheetUrl: `https://docs.google.com/spreadsheets/d/${Date.now()}`
-      }
-    );
-    return await response.json();
+    const response = await apiRequest<Export>({
+      method: "GET",
+      url: "/api/exports/latest",
+      on401: "returnNull",
+    });
+    
+    return response;
   } catch (error) {
-    console.error("Error exporting to Google Sheets:", error);
-    throw error;
+    console.error("Error fetching latest export:", error);
+    return null;
   }
 }
 
-// Get the latest export from the backend
-export async function getLatestExport(): Promise<Export | null> {
-  try {
-    const response = await apiRequest("GET", "/api/exports/latest", undefined);
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Response && error.status === 404) {
-      return null;
-    }
-    console.error("Error getting latest export:", error);
-    throw error;
-  }
+/**
+ * React query hook to get the latest export record
+ */
+export function useLatestExport() {
+  return useQuery({
+    queryKey: ["/api/exports/latest"],
+    refetchInterval: 10000, // Refetch every 10 seconds to check for status updates
+  });
 }

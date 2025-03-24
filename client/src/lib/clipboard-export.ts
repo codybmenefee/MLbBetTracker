@@ -10,17 +10,29 @@ export function formatRecommendationsAsCSV(recommendations: Recommendation[]): s
     return "";
   }
 
-  // Define headers
-  const headers = ["Game", "Bet Type", "Odds", "Confidence", "Prediction", "Generated At"];
+  // Define headers with source information
+  const headers = [
+    "Game", "Game Source", 
+    "Bet Type", "Bet Type Source", 
+    "Odds", "Odds Source", 
+    "Confidence", "Confidence Source", 
+    "Prediction", "Prediction Source", 
+    "Generated At"
+  ];
   
   // Create rows for each recommendation
   const rows = recommendations.map(rec => {
     return [
       rec.game,
+      rec.gameSource || 'LLM',
       rec.betType,
+      rec.betTypeSource || 'LLM',
       rec.odds,
+      rec.oddsSource || 'LLM',
       `${rec.confidence}%`,
+      rec.confidenceSource || 'LLM',
       rec.prediction,
+      rec.predictionSource || 'LLM',
       new Date(rec.generatedAt).toLocaleString()
     ];
   });
@@ -71,15 +83,27 @@ export async function prepareDataForGoogleSheets(recommendations: Recommendation
     }
     
     // Format as tab-separated values which paste better into Google Sheets
-    const headers = ["Game", "Bet Type", "Odds", "Confidence", "Prediction", "Generated At"];
+    const headers = [
+      "Game", "Game Source", 
+      "Bet Type", "Bet Type Source", 
+      "Odds", "Odds Source", 
+      "Confidence", "Confidence Source", 
+      "Prediction", "Prediction Source", 
+      "Generated At"
+    ];
     
     const rows = recommendations.map(rec => {
       return [
         rec.game,
+        rec.gameSource || 'LLM',
         rec.betType,
+        rec.betTypeSource || 'LLM',
         rec.odds,
+        rec.oddsSource || 'LLM',
         `${rec.confidence}%`,
+        rec.confidenceSource || 'LLM',
         rec.prediction,
+        rec.predictionSource || 'LLM',
         new Date(rec.generatedAt).toLocaleString()
       ];
     });

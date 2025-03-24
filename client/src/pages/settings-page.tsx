@@ -39,12 +39,15 @@ export default function SettingsPage() {
   const [savedSheetsSettings, setSavedSheetsSettings] = useState<GoogleSheetsFormValues | null>(null);
   const [savedScriptSettings, setSavedScriptSettings] = useState<string | null>(null);
 
+  // Today's date in format 'YYYY-MM-DD'
+  const today = new Date().toISOString().split('T')[0];
+
   // Form for Google Sheets configuration
   const sheetsForm = useForm<GoogleSheetsFormValues>({
     resolver: zodResolver(googleSheetsFormSchema),
     defaultValues: {
       googleSheetUrl: "",
-      googleSheetName: "MLB Betting Recommendations",
+      googleSheetName: `MLB Betting Recommendations ${today}`,
     },
   });
 

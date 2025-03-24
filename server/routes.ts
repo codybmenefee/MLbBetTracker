@@ -245,10 +245,7 @@ CRITICAL REQUIREMENTS:
         validatedRecommendations.push(validatedData);
       }
 
-      // Clear existing recommendations before creating new ones
-      await storage.clearRecommendations();
-      
-      // Create new recommendations
+      // Create new recommendations (the createRecommendations method already clears existing ones)
       const savedRecommendations = await storage.createRecommendations(validatedRecommendations);
       res.status(201).json(savedRecommendations);
     } catch (err) {

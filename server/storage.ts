@@ -105,7 +105,9 @@ export class MemStorage implements IStorage {
     const newExport: Export = { 
       ...exportData, 
       id, 
-      exportDate: new Date() 
+      exportDate: new Date(),
+      errorMessage: exportData.errorMessage || null,
+      exportedData: exportData.exportedData || null
     };
     this.exportsData.set(id, newExport);
     return newExport;

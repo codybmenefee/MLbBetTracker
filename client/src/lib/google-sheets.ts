@@ -18,7 +18,6 @@ export async function exportToGoogleSheet(): Promise<Export> {
   
   // Prepare the export request data
   const exportData: InsertExport = {
-    exportDate: new Date().toISOString(),
     destination: config.googleSheetUrl,
     sheetName: config.googleSheetName || "MLB Betting Recommendations",
     status: "pending"
@@ -59,7 +58,7 @@ export async function getLatestExport(): Promise<Export | null> {
  * React query hook to get the latest export record
  */
 export function useLatestExport() {
-  return useQuery({
+  return useQuery<Export>({
     queryKey: ["/api/exports/latest"],
     refetchInterval: 10000, // Refetch every 10 seconds to check for status updates
   });

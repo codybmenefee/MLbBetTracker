@@ -30,8 +30,11 @@ export const recommendations = pgTable("recommendations", {
 export const exports = pgTable("exports", {
   id: serial("id").primaryKey(),
   exportDate: timestamp("export_date").defaultNow().notNull(),
-  sheetUrl: text("sheet_url").notNull(),
-  exportedData: json("exported_data").notNull(),
+  destination: text("destination").notNull(),
+  sheetName: text("sheet_name").notNull(),
+  status: text("status").notNull(), // "pending", "completed", "failed"
+  errorMessage: text("error_message"),
+  exportedData: json("exported_data"),
 });
 
 // Create insert schemas

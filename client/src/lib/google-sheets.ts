@@ -83,19 +83,68 @@ export async function exportToGoogleSheet(): Promise<Export> {
     }
   }
 
-  // Always call the API to create a new export record (even if direct export was attempted)
-  // This ensures we maintain a history of exports in our system
-  const response = await apiRequest<Export>({
-    method: "POST",
-    url: "/api/exports",
-    body: exportData,
-  });
-
-  // Invalidate exports cache
-  queryClient.invalidateQueries({ queryKey: ["/api/exports"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/exports/latest"] });
+  // If direct export was successful via Google Apps Script, mark the export data as completed
+  if (directExportResult && directExportResult.success) {
+    exportData.status = "completed";
+    exportData.message = "Successfully exported via Google Apps Script. The data should be visible in your spreadsheet.";
+    
+    try {
+      // Create an export record to track the successful export
+      const response = await apiRequest<Export>({
+        method: "POST",
+        url: "/api/exports",
+        body: exportData,
+      });
   
-  return response;
+      // Invalidate exports cache
+      queryClient.invalidateQueries({ queryKey: ["/api/exports"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/exports/latest"] });
+      
+      return response;
+    } catch (error) {
+      // If the API call fails but the direct export was successful,
+      // create a fake successful export to return to the client
+      console.warn("Export API call failed, but direct export was successful:", error);
+      return {
+        id: 0,
+        destination: exportData.destination,
+        sheetName: exportData.sheetName,
+        status: "completed",
+        createdAt: new Date().toISOString(),
+        message: "Direct export was successful. Data should appear in your spreadsheet."
+      };
+    }
+  }
+  
+  // If no direct export or direct export failed, proceed with the normal export process
+  try {
+    const response = await apiRequest<Export>({
+      method: "POST",
+      url: "/api/exports",
+      body: exportData,
+    });
+  
+    // Invalidate exports cache
+    queryClient.invalidateQueries({ queryKey: ["/api/exports"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/exports/latest"] });
+    
+    return response;
+  } catch (error) {
+    // Check if server-side export failed but we had a successful direct export
+    if (directExportResult && directExportResult.success) {
+      return {
+        id: 0,
+        destination: exportData.destination,
+        sheetName: exportData.sheetName,
+        status: "completed",
+        createdAt: new Date().toISOString(),
+        message: "Direct export was successful. Data should appear in your spreadsheet."
+      };
+    }
+    
+    // Re-throw the error for regular failures
+    throw error;
+  }
 }
 
 /**

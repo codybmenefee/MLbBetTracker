@@ -27,7 +27,7 @@ const appsScriptFormSchema = z.object({
     .trim()
     .min(1, "Google Apps Script URL is required")
     .refine(isValidGoogleAppsScriptUrl, {
-      message: "Must be a valid Google Apps Script URL that ends with '/exec' (e.g., https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec)"
+      message: "Must be a valid Google Apps Script web app URL that ends with '/exec' (e.g., https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec). Script library URLs ending with a number (like /1 or /2) will not work properly."
     })
 });
 

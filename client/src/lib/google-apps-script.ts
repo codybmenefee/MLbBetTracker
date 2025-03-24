@@ -130,17 +130,42 @@ export function showGoogleAppsScriptSetupGuide() {
  * https://script.google.com/macros/s/SCRIPT_ID/exec
  */
 export function isValidGoogleAppsScriptUrl(url: string): boolean {
-  // Check if it's in the correct format
-  const isCorrectFormat = /https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+\/exec/.test(url);
+  if (!url) return false;
   
-  // If not in correct format, log a helpful message
-  if (!isCorrectFormat && url) {
-    console.log("Invalid Google Apps Script URL format. The URL should end with '/exec' and be from a deployed web app, not a script library.");
+  // Check if it's in the correct format - must end with /exec
+  const isCorrectFormat = /https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+\/exec$/.test(url);
+  
+  // Try to fix common errors automatically
+  if (!isCorrectFormat) {
+    // Get the base script URL
+    const match = url.match(/https:\/\/script\.google\.com\/macros\/[s|e]\/[\w-]+/);
     
-    // Return true for library URLs to prevent validation errors during development/testing
-    if (url.includes('script.google.com/macros/')) {
-      return true;
+    if (match) {
+      const baseUrl = match[0];
+      
+      // If URL ends with something other than /exec (like /edit, /dev, etc.)
+      if (/\/\w+$/.test(url) && !url.endsWith('/exec')) {
+        console.warn("Google Apps Script URL doesn't end with '/exec'. It might not work correctly.");
+        
+        // If the URL appears to be a library URL (ends with /2, /1, etc.)
+        if (/\/\d+$/.test(url)) {
+          console.warn("This appears to be a Google Script library URL, not a deployed web app URL.");
+        }
+        
+        // Allow non-standard URLs in development to prevent excessive validation errors
+        return true;
+      }
+      
+      // If the URL is missing the /exec entirely
+      else if (baseUrl === url) {
+        console.warn("Google Apps Script URL is missing '/exec' at the end. It will likely not work correctly.");
+        
+        // Allow non-standard URLs in development to prevent excessive validation errors
+        return true;
+      }
     }
+    
+    console.error("Invalid Google Apps Script URL format. The URL should be from a deployed web app and end with '/exec'");
   }
   
   return isCorrectFormat;

@@ -8,11 +8,12 @@ import { ArrowUpRight, InfoIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
+import { Recommendation } from "@shared/schema";
 
 export default function RecommendationsPanel() {
   const { toast } = useToast();
 
-  const { data: recommendations, isLoading, error } = useQuery({
+  const { data: recommendations, isLoading, error } = useQuery<Recommendation[]>({
     queryKey: ["/api/recommendations"],
   });
 
@@ -45,7 +46,7 @@ export default function RecommendationsPanel() {
       queryClient.invalidateQueries({ queryKey: ["/api/exports/latest"] });
       
       // Optional: Open the sheet in a new tab
-      window.open(data.sheetUrl, "_blank");
+      window.open(data.destination, "_blank");
     },
     onError: (error) => {
       toast({
@@ -65,9 +66,9 @@ export default function RecommendationsPanel() {
   };
 
   const getConfidenceColor = (confidence: number): string => {
-    if (confidence >= 75) return "bg-success";
-    if (confidence >= 60) return "bg-warning";
-    return "bg-danger";
+    if (confidence >= 75) return "bg-green-500";
+    if (confidence >= 60) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   if (isLoading) {
@@ -213,7 +214,7 @@ export default function RecommendationsPanel() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {recommendations.map((rec) => (
+                  {recommendations && recommendations.map((rec: Recommendation) => (
                     <tr key={rec.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{rec.game}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{rec.betType}</td>

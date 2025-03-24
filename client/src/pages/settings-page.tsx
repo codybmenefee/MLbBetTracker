@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { showGoogleAppsScriptSetupGuide, isValidGoogleAppsScriptUrl } from "@/lib/google-apps-script";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, Copy, CheckCircle2 } from "lucide-react";
 
 // Validation schema for Google Apps Script configuration
 const appsScriptFormSchema = z.object({
@@ -28,6 +29,7 @@ type AppsScriptFormValues = z.infer<typeof appsScriptFormSchema>;
 export default function SettingsPage() {
   const { toast } = useToast();
   const [savedScriptSettings, setSavedScriptSettings] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Form for Google Apps Script configuration
   const scriptForm = useForm<AppsScriptFormValues>({
@@ -67,6 +69,168 @@ export default function SettingsPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const appsScriptCode = `/**
+ * MLB Betting Recommendations - Google Apps Script
+ * 
+ * Instructions:
+ * 1. Open your Google Spreadsheet
+ * 2. Go to Extensions > Apps Script
+ * 3. Paste this entire script
+ * 4. Save and deploy as a web app (Publish > Deploy as web app)
+ *    - Execute as: Me
+ *    - Who has access: Anyone (or specific users/domain)
+ * 5. Copy the web app URL for use in your application
+ */
+
+// Process HTTP POST requests from your app
+function doPost(e) {
+  try {
+    // Parse the JSON data sent from your application
+    const data = JSON.parse(e.postData.contents);
+    const recommendations = data.recommendations;
+    
+    if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: "No valid recommendations data provided"
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get the active spreadsheet and sheet (or create a new sheet)
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetName = data.sheetName || "MLB Recommendations";
+    
+    // Try to get the sheet if it exists, otherwise create it
+    let sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    }
+    
+    // Clear previous content and format the sheet
+    sheet.clear();
+    
+    // Set up headers
+    const headers = ["Game", "Bet Type", "Odds", "Confidence", "Prediction", "Generated At", "Date Exported"];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    
+    // Format header row
+    sheet.getRange(1, 1, 1, headers.length)
+      .setBackground("#4285F4")
+      .setFontColor("white")
+      .setFontWeight("bold");
+    
+    // Prepare data rows
+    const rows = recommendations.map(rec => [
+      rec.game,
+      rec.betType,
+      rec.odds,
+      \`\${rec.confidence}%\`,
+      rec.prediction,
+      new Date(rec.generatedAt).toLocaleString(),
+      new Date().toLocaleString()
+    ]);
+    
+    // Write data to sheet
+    if (rows.length > 0) {
+      sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+    }
+    
+    // Auto-size columns for better readability
+    for (let i = 1; i <= headers.length; i++) {
+      sheet.autoResizeColumn(i);
+    }
+    
+    // Add alternating row colors
+    if (rows.length > 0) {
+      for (let i = 0; i < rows.length; i++) {
+        if (i % 2 === 1) {
+          sheet.getRange(i + 2, 1, 1, headers.length).setBackground("#f3f3f3");
+        }
+      }
+    }
+    
+    // Return success response
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: \`Successfully exported \${rows.length} recommendations to sheet "\${sheetName}"\`,
+      updatedAt: new Date().toISOString()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    // Return error response
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Process HTTP GET requests (for testing)
+function doGet() {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "The API is running",
+    instructions: "Send POST requests with recommendation data to use this endpoint"
+  }))
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Test function - can be run directly from the Apps Script editor
+ * to test the functionality with sample data
+ */
+function testWithSampleData() {
+  const sampleData = {
+    recommendations: [
+      {
+        game: "New York Yankees vs Boston Red Sox",
+        betType: "Moneyline",
+        odds: "-150",
+        confidence: 75,
+        prediction: "Yankees Win",
+        generatedAt: new Date().toISOString()
+      },
+      {
+        game: "Los Angeles Dodgers vs San Francisco Giants",
+        betType: "Run Line (-1.5)",
+        odds: "+120",
+        confidence: 65,
+        prediction: "Dodgers Cover",
+        generatedAt: new Date().toISOString()
+      }
+    ],
+    sheetName: "Test Data"
+  };
+  
+  // Simulate a POST request
+  const mockE = {
+    postData: {
+      contents: JSON.stringify(sampleData)
+    }
+  };
+  
+  // Process the mock request
+  const result = doPost(mockE);
+  
+  // Log the result
+  Logger.log(result.getContent());
+}`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(appsScriptCode);
+    setCopied(true);
+    toast({
+      title: "Code Copied",
+      description: "Apps Script code copied to clipboard",
+    });
+    
+    setTimeout(() => {
+      setCopied(false);
+    }, 3000);
   };
 
   return (
@@ -132,6 +296,38 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+            
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-sm font-medium">Google Apps Script Code</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8"
+                  onClick={copyToClipboard}
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-1" /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" /> Copy Code
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="relative">
+                <pre className="bg-slate-50 dark:bg-slate-900 p-4 rounded-md text-xs overflow-auto max-h-[300px] border border-slate-200 dark:border-slate-800 font-mono">
+                  {appsScriptCode}
+                </pre>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Copy this code and paste it into your Google Apps Script editor
+              </p>
+            </div>
+            
+            <Separator className="my-6" />
             
             <Form {...scriptForm}>
               <form onSubmit={scriptForm.handleSubmit(onScriptSubmit)} className="space-y-6">

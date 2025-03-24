@@ -114,7 +114,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
         destination: exportData.destination,
         sheetName: exportData.sheetName,
         status: "completed",
-        exportDate: new Date().toISOString(),
+        exportDate: new Date(),  // Fixed: use Date object instead of string
         message: "Direct export was successful. Data should appear in your spreadsheet."
       };
     }
@@ -141,7 +141,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
         destination: exportData.destination,
         sheetName: exportData.sheetName,
         status: "completed",
-        exportDate: new Date().toISOString(),
+        exportDate: new Date(),  // Fixed: use Date object instead of string
         message: "Direct export was successful. Data should appear in your spreadsheet."
       };
     }

@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { generateRecommendations } from "@/lib/openai";
 import { exportToGoogleSheet } from "@/lib/google-sheets";
-import { ArrowUpRight, InfoIcon } from "lucide-react";
+import { prepareDataForGoogleSheets } from "@/lib/clipboard-export";
+import { ArrowUpRight, InfoIcon, Clipboard, ClipboardCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
 import { Recommendation } from "@shared/schema";
+import { useState } from "react";
 
 export default function RecommendationsPanel() {
   const { toast } = useToast();
+  const [isCopied, setIsCopied] = useState(false);
 
   const { data: recommendations, isLoading, error } = useQuery<Recommendation[]>({
     queryKey: ["/api/recommendations"],
@@ -79,6 +82,45 @@ export default function RecommendationsPanel() {
 
   const handleExportToSheet = () => {
     exportMutation.mutate();
+  };
+  
+  const handleCopyToClipboard = async () => {
+    if (!recommendations || recommendations.length === 0) {
+      toast({
+        title: "Error",
+        description: "No recommendations available to copy",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const success = await prepareDataForGoogleSheets(recommendations);
+      
+      if (success) {
+        setIsCopied(true);
+        toast({
+          title: "Success",
+          description: "Recommendations copied to clipboard in spreadsheet format. You can now paste directly into Google Sheets.",
+          duration: 5000,
+        });
+        
+        // Reset the copied state after 3 seconds
+        setTimeout(() => setIsCopied(false), 3000);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to copy data to clipboard",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to copy to clipboard: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const getConfidenceColor = (confidence: number): string => {
@@ -191,14 +233,42 @@ export default function RecommendationsPanel() {
           <h2 className="text-2xl font-semibold text-neutral">AI Recommendations</h2>
           <p className="text-gray-600">Top 5 betting opportunities for today</p>
         </div>
-        <Button 
-          onClick={handleExportToSheet}
-          disabled={exportMutation.isPending || !recommendations || recommendations.length === 0}
-          className="mt-3 md:mt-0"
-        >
-          Export to Google Sheet
-          <ArrowUpRight className="w-4 h-4 ml-2" />
-        </Button>
+        <div className="flex flex-col md:flex-row gap-2 mt-3 md:mt-0">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleCopyToClipboard}
+                  disabled={!recommendations || recommendations.length === 0}
+                  variant="outline"
+                  className="flex items-center"
+                >
+                  {isCopied ? (
+                    <>
+                      <ClipboardCheck className="w-4 h-4 mr-2" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Clipboard className="w-4 h-4 mr-2" />
+                      Copy for Spreadsheet
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copies data in a format ready to paste directly into Google Sheets</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Button 
+            onClick={handleExportToSheet}
+            disabled={exportMutation.isPending || !recommendations || recommendations.length === 0}
+          >
+            Export to Google Sheet
+            <ArrowUpRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </div>
       
       <Card>

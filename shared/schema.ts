@@ -23,6 +23,11 @@ export const recommendations = pgTable("recommendations", {
   odds: text("odds").notNull(),
   confidence: integer("confidence").notNull(),
   prediction: text("prediction").notNull(),
+  gameSource: text("game_source").default("LLM").notNull(),
+  betTypeSource: text("bet_type_source").default("LLM").notNull(),
+  oddsSource: text("odds_source").default("LLM").notNull(),
+  confidenceSource: text("confidence_source").default("LLM").notNull(),
+  predictionSource: text("prediction_source").default("LLM").notNull(),
   generatedAt: timestamp("generated_at").defaultNow().notNull(),
 });
 

@@ -201,10 +201,20 @@ CRITICAL REQUIREMENTS:
         return res.status(500).json({ message: "Invalid response format from OpenAI: " + errorMessage });
       }
 
-      // Validate and save recommendations
+      // Validate and save recommendations with source information
       const validatedRecommendations = [];
       for (const rec of recommendationsData.recommendations) {
-        const validatedData = insertRecommendationSchema.parse(rec);
+        // Add source information for each field
+        const recWithSources = {
+          ...rec,
+          gameSource: "LLM",          // Default source is LLM
+          betTypeSource: "LLM",       // Everything comes from the LLM for now
+          oddsSource: "LLM",          // We could add ESPN or other sources in the future
+          confidenceSource: "LLM",    // These sources will be displayed in the UI
+          predictionSource: "LLM"     // to indicate data provenance
+        };
+        
+        const validatedData = insertRecommendationSchema.parse(recWithSources);
         validatedRecommendations.push(validatedData);
       }
 

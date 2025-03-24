@@ -302,16 +302,29 @@ export default function RecommendationsPanel() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {recommendations && recommendations.map((rec: Recommendation) => (
                     <tr key={rec.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{rec.game}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{rec.betType}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{rec.odds}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {rec.game}
+                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.gameSource || 'LLM'}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {rec.betType}
+                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.betTypeSource || 'LLM'}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {rec.odds}
+                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.oddsSource || 'LLM'}</span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="w-24 bg-gray-200 rounded-full h-2.5">
                           <div className={`${getConfidenceColor(rec.confidence)} h-2.5 rounded-full`} style={{ width: `${rec.confidence}%` }}></div>
                         </div>
                         <span className="text-xs text-gray-500 mt-1 block">{rec.confidence}%</span>
+                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.confidenceSource || 'LLM'}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{rec.prediction}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {rec.prediction}
+                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.predictionSource || 'LLM'}</span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <TooltipProvider>
                           <Tooltip>

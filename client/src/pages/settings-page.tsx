@@ -252,16 +252,30 @@ function testWithSampleData() {
                 <InfoIcon className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-medium mb-1">How to set up direct export</h4>
-                  <p className="text-sm text-muted-foreground">
-                    For automatic publishing to Google Sheets, you need to create a Google Apps Script. 
+                  <p className="text-sm text-muted-foreground mb-2">
+                    For automatic publishing to Google Sheets, follow these steps:
+                  </p>
+                  <ol className="text-sm text-muted-foreground space-y-2 ml-5 list-decimal">
+                    <li>Open your target Google Spreadsheet</li>
+                    <li>Go to <strong>Extensions &gt; Apps Script</strong> in the menu</li>
+                    <li>Copy the Google Apps Script code below</li>
+                    <li>Paste it into the Apps Script editor, replacing any existing code</li>
+                    <li>Click <strong>Save</strong> (disk icon)</li>
+                    <li>Click <strong>Deploy &gt; New deployment</strong></li>
+                    <li>Set type to <strong>Web app</strong></li>
+                    <li>Set <strong>Execute as: Me</strong> and <strong>Who has access: Anyone</strong></li>
+                    <li>Click <strong>Deploy</strong> and authorize when prompted</li>
+                    <li>Copy the <strong>Web app URL</strong> and paste it below</li>
+                  </ol>
+                  <div className="mt-2">
                     <Button 
                       variant="link" 
                       className="p-0 h-auto text-sm"
                       onClick={() => showGoogleAppsScriptSetupGuide()}
                     >
-                      View setup instructions
+                      Show interactive guide
                     </Button>
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>

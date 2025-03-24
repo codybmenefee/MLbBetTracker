@@ -18,11 +18,26 @@ export async function exportToGoogleSheet(): Promise<Export> {
   const appsScriptUrl = localStorage.getItem("googleAppsScriptUrl");
   const hasDirectIntegration = appsScriptUrl && isValidGoogleAppsScriptUrl(appsScriptUrl);
   
-  // If we have direct integration but no Google Sheets config, create a default config
+  // If we have direct integration but no Google Sheets config, create a config with the actual sheet URL
   if (hasDirectIntegration && !configStr) {
-    // Use a default fallback URL for the export record
+    // Use the script URL to try to extract the spreadsheet URL
+    // Format: https://script.google.com/macros/s/[ID]/exec
+    // We need to extract just the base script URL and try to determine the sheet URL
+    
+    // First, prompt user to actually view the spreadsheet directly
+    toast({
+      title: "Opening Google Spreadsheet",
+      description: "When using direct integration, you need to open the spreadsheet directly instead of through this app.",
+      duration: 5000,
+    });
+    
+    // Open the Apps Script URL in a new tab - 
+    // This will trigger the doGet function which should show usage instructions
+    window.open(appsScriptUrl, "_blank");
+    
+    // For tracking purposes, still store a record with a special URL
     config = { 
-      googleSheetUrl: "https://docs.google.com/spreadsheets/d/YourSpreadsheetUsesDirectIntegration/edit" 
+      googleSheetUrl: appsScriptUrl.replace("/exec", "").concat("?source=direct-integration") 
     };
   } else if (!configStr) {
     throw new Error("Google Sheets configuration not found and no Apps Script integration is set up. Please configure in Settings.");

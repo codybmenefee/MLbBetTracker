@@ -100,13 +100,63 @@ function doPost(e) {
   }
 }
 
-// Process HTTP GET requests (for testing)
+// Process HTTP GET requests - shows a helpful info page when users visit the script URL
 function doGet() {
-  return ContentService.createTextOutput(JSON.stringify({
-    status: "The API is running",
-    instructions: "Send POST requests with recommendation data to use this endpoint"
-  }))
-  .setMimeType(ContentService.MimeType.JSON);
+  // Get the active spreadsheet URL to help users
+  let spreadsheetUrl = "";
+  try {
+    spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  } catch (e) {
+    spreadsheetUrl = "Unable to determine spreadsheet URL. Make sure you're running this script from your Google Sheet.";
+  }
+  
+  // Create a simple HTML page with instructions and the spreadsheet link
+  const htmlOutput = HtmlService.createHtmlOutput(`
+    <html>
+      <head>
+        <title>MLB Betting Recommendations - Google Apps Script</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+          h1 { color: #4285F4; }
+          .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+          .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+          a { color: #4285F4; }
+          code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        </style>
+      </head>
+      <body>
+        <h1>MLB Betting Recommendations - Google Apps Script</h1>
+        
+        <div class="success">
+          <strong>✓ Success!</strong> Your Google Apps Script is properly deployed and ready to receive data from the MLB Betting Recommendations application.
+        </div>
+        
+        <div class="info">
+          <strong>Your Google Spreadsheet:</strong><br>
+          <a href="${spreadsheetUrl}" target="_blank">${spreadsheetUrl}</a>
+        </div>
+        
+        <h2>How this works:</h2>
+        <p>
+          This script is connected to your MLB Betting Recommendations application. When you click "Export to Google Sheets" 
+          in the application, your betting recommendations will be sent directly to this script, which will then create or update 
+          a sheet in your Google Spreadsheet with the latest data.
+        </p>
+        
+        <h2>Important Notes:</h2>
+        <ul>
+          <li>This page appears when you visit the script URL directly in your browser</li>
+          <li>The actual data transfer happens through POST requests from the application</li>
+          <li>A new sheet tab will be created for each day's recommendations (format: <code>MLB Betting Recommendations YYYY-MM-DD</code>)</li>
+          <li>If you encounter any issues, you can check the Execution Log in the Apps Script editor</li>
+        </ul>
+        
+        <p>Return to your MLB Betting Recommendations application to continue.</p>
+      </body>
+    </html>
+  `);
+  
+  return htmlOutput;
 }
 
 /**

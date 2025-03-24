@@ -89,38 +89,70 @@ export async function exportToGoogleAppsScript(
 }
 
 /**
- * Simple helper to prompt users to set up the Google Apps Script
+ * Interactive helper to guide users through setting up the Google Apps Script
  */
 export function showGoogleAppsScriptSetupGuide() {
   toast({
-    title: "Google Sheets Integration",
-    description: "To set up direct Google Sheets integration, you need to create a Google Apps Script.",
-    duration: 5000,
+    title: "Google Sheets Integration Guide",
+    description: "We'll walk you through setting up direct export to Google Sheets step-by-step.",
+    duration: 6000,
   });
   
-  toast({
-    title: "Step 1",
-    description: "Open the target Google Sheet and go to Extensions > Apps Script.",
-    duration: 5000,
-  });
+  setTimeout(() => {
+    toast({
+      title: "Step 1: Create Apps Script",
+      description: "Open your Google Sheet and go to Extensions > Apps Script in the top menu.",
+      duration: 6000,
+    });
+  }, 1000);
   
-  toast({
-    title: "Step 2",
-    description: "Copy the script from the docs/google-apps-script-solution.js file in this project.",
-    duration: 5000,
-  });
+  setTimeout(() => {
+    toast({
+      title: "Step 2: Copy the Code",
+      description: "Use the Copy Code button on the Settings page to copy the Apps Script code.",
+      duration: 6000,
+    });
+  }, 7000);
   
-  toast({
-    title: "Step 3",
-    description: "Paste the script in the Apps Script editor, save, and deploy as a web app.",
-    duration: 5000,
-  });
+  setTimeout(() => {
+    toast({
+      title: "Step 3: Replace Editor Content",
+      description: "In the Apps Script editor, replace any existing code with the copied code and click Save (disk icon).",
+      duration: 6000,
+    });
+  }, 13000);
   
-  toast({
-    title: "Step 4",
-    description: "Copy the web app URL and enter it in the Settings page of this application.",
-    duration: 5000,
-  });
+  setTimeout(() => {
+    toast({
+      title: "Step 4: Deploy as Web App",
+      description: "Click Deploy > New deployment. Select Web app type, set 'Execute as: Me' and 'Anyone has access'.",
+      duration: 7000,
+    });
+  }, 19000);
+  
+  setTimeout(() => {
+    toast({
+      title: "Step 5: Authorize and Copy URL",
+      description: "Click Deploy, authorize when prompted, then copy the Web app URL (ends with /exec).",
+      duration: 7000,
+    });
+  }, 26000);
+  
+  setTimeout(() => {
+    toast({
+      title: "Step 6: Save in Settings",
+      description: "Paste the URL in the form below and click Save Settings to complete the setup.",
+      duration: 7000,
+    });
+  }, 33000);
+  
+  setTimeout(() => {
+    toast({
+      title: "Success!",
+      description: "Once configured, you can export directly to Google Sheets with one click from the recommendations screen.",
+      duration: 7000,
+    });
+  }, 40000);
 }
 
 /**

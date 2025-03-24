@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,8 +24,16 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [savedSettings, setSavedSettings] = useState<FormValues | null>(null);
 
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      googleSheetUrl: "",
+      googleSheetName: "MLB Betting Recommendations",
+    },
+  });
+
   // Load saved settings from localStorage on component mount
-  useState(() => {
+  useEffect(() => {
     const savedData = localStorage.getItem("googleSheetsConfig");
     if (savedData) {
       try {
@@ -36,15 +44,7 @@ export default function SettingsPage() {
         console.error("Error parsing saved settings:", e);
       }
     }
-  });
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      googleSheetUrl: "",
-      googleSheetName: "MLB Betting Recommendations",
-    },
-  });
+  }, []);
 
   const onSubmit = (data: FormValues) => {
     // Save to localStorage

@@ -83,7 +83,11 @@ export function convertToGames(rows: CsvRow[]): InsertGame[] {
 // Upload games to the backend
 export async function uploadGames(games: InsertGame[]): Promise<void> {
   try {
-    await apiRequest("POST", "/api/games", games);
+    await apiRequest({
+      method: "POST",
+      url: "/api/games",
+      body: games
+    });
   } catch (error) {
     console.error("Error uploading games:", error);
     throw error;

@@ -240,18 +240,22 @@ CRITICAL REQUIREMENTS:
   // Create a new export (simulating Google Sheets export)
   app.post("/api/exports", async (req: Request, res: Response) => {
     try {
-      const { sheetUrl } = req.body;
+      const exportRequest = req.body;
       const recommendations = await storage.getRecommendations();
       
       if (recommendations.length === 0) {
         return res.status(400).json({ message: "No recommendations to export" });
       }
 
+      // Simulate Google Sheets API call in a real implementation
+      // Here, we'll just simulate success/failure and add a delay
       const exportData = {
-        sheetUrl: sheetUrl || `https://docs.google.com/spreadsheets/d/${Date.now()}`,
+        ...exportRequest,
+        status: "completed", // Updates the status from "pending" to "completed"
         exportedData: recommendations
       };
 
+      // Validate the export data
       const validatedExport = insertExportSchema.parse(exportData);
       const savedExport = await storage.createExport(validatedExport);
 

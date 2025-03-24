@@ -47,8 +47,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parsedGames = req.body;
       const validatedGames = [];
 
-      // Validate each game in the array
+      // Validate each game in the array and ensure dates are properly formatted
       for (const game of parsedGames) {
+        // Check if gameTime is a string and convert to Date
+        if (typeof game.gameTime === 'string') {
+          try {
+            // Try to parse the date string
+            const gameDate = new Date(game.gameTime);
+            
+            // Check if the date is valid
+            if (!isNaN(gameDate.getTime())) {
+              game.gameTime = gameDate;
+            } else {
+              // If invalid date string, use current date
+              game.gameTime = new Date();
+            }
+          } catch (e) {
+            // If date parsing fails, use current date
+            game.gameTime = new Date();
+          }
+        }
+
+        // Parse through schema for validation
         const validatedData = insertGameSchema.parse(game);
         validatedGames.push(validatedData);
       }
@@ -174,9 +194,10 @@ CRITICAL REQUIREMENTS:
             throw new Error("Invalid odds format: must be a string with +/- prefix");
           }
         }
-      } catch (error) {
-        console.error("Error parsing OpenAI response:", error, content);
-        return res.status(500).json({ message: "Invalid response format from OpenAI: " + error.message });
+      } catch (err: any) {
+        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+        console.error("Error parsing OpenAI response:", errorMessage, content);
+        return res.status(500).json({ message: "Invalid response format from OpenAI: " + errorMessage });
       }
 
       // Validate and save recommendations

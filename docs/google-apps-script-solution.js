@@ -114,6 +114,9 @@ function doGet() {
  * to test the functionality with sample data
  */
 function testWithSampleData() {
+  // Use today's date for the test sheet name
+  const today = new Date().toISOString().split('T')[0];
+  
   const sampleData = {
     recommendations: [
       {
@@ -133,7 +136,7 @@ function testWithSampleData() {
         generatedAt: new Date().toISOString()
       }
     ],
-    sheetName: "Test Data"
+    sheetName: `MLB Betting Recommendations ${today}`
   };
   
   // Simulate a POST request

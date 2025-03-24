@@ -162,12 +162,13 @@ export default function SettingsPage() {
                     name="googleSheetName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Sheet Name (Optional)</FormLabel>
+                        <FormLabel>Sheet Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="MLB Betting Recommendations" {...field} />
+                          <Input placeholder="MLB Betting Recommendations" {...field} disabled />
                         </FormControl>
                         <FormDescription>
-                          The name of the sheet where recommendations will be exported
+                          The name of the sheet where recommendations will be exported. 
+                          Today's date will automatically be appended in the format: "MLB Betting Recommendations YYYY-MM-DD"
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -289,7 +290,10 @@ function doPost(e) {
     
     // Get the active spreadsheet and sheet (or create a new sheet)
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = data.sheetName || "MLB Recommendations";
+    
+    // Use today's date for the sheet name if not provided
+    const today = new Date().toISOString().split('T')[0];
+    const sheetName = data.sheetName || "MLB Betting Recommendations " + today;
     
     // Try to get the sheet if it exists, otherwise create it
     let sheet = ss.getSheetByName(sheetName);
@@ -395,6 +399,9 @@ function doOptions(e) {
  * to test the functionality with sample data
  */
 function testWithSampleData() {
+  // Use today's date for the test sheet name
+  const today = new Date().toISOString().split('T')[0];
+  
   const sampleData = {
     recommendations: [
       {
@@ -414,7 +421,7 @@ function testWithSampleData() {
         generatedAt: new Date().toISOString()
       }
     ],
-    sheetName: "Test Data"
+    sheetName: "MLB Betting Recommendations " + today
   };
   
   // Simulate a POST request

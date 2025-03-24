@@ -258,23 +258,28 @@ CRITICAL REQUIREMENTS:
         return res.status(400).json({ message: "No recommendations to export" });
       }
       
+      // Make sure we're using today's date in the sheet name
+      const today = new Date().toISOString().split('T')[0];
+      const sheetName = `MLB Betting Recommendations ${today}`;
+      
       // Log export details for debugging
-      console.log(`Exporting recommendations to sheet: ${exportRequest.destination}, tab: ${exportRequest.sheetName}`);
+      console.log(`Exporting recommendations to sheet: ${exportRequest.destination}, tab: ${sheetName}`);
       
       // Call the mock Google Sheets export function
       // In production, this would use the actual Google Sheets API
       const exportResult = await exportRecommendationsToSheet(
         recommendations,
         exportRequest.destination,
-        exportRequest.sheetName
+        sheetName
       );
       
       // Set the export status based on the result
       const exportStatus = exportResult.success ? "completed" : "failed";
       
-      // Create the export record
+      // Create the export record with the dynamic sheet name
       const exportData = {
         ...exportRequest,
+        sheetName: sheetName, // Override with dynamic sheet name
         status: exportStatus,
         exportedData: recommendations,
         errorMessage: exportResult.success ? null : exportResult.message

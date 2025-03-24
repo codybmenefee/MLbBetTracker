@@ -12,6 +12,7 @@ export const games = pgTable("games", {
   awayOdds: text("away_odds").notNull(),
   overUnderLine: text("over_under_line").notNull(),
   overUnderOdds: text("over_under_odds").notNull(),
+  source: text("source").default("LLM").notNull(),
   uploadDate: timestamp("upload_date").defaultNow().notNull(),
 });
 

@@ -109,6 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         awayOdds: game.awayOdds,
         overUnderLine: game.overUnderLine,
         overUnderOdds: game.overUnderOdds,
+        source: game.source || "LLM" // Include the source of the game data
       }));
 
       // Create prompt for OpenAI

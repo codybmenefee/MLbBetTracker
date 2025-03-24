@@ -1,5 +1,6 @@
 import { csvRowSchema, type CsvRow, type InsertGame } from "@shared/schema";
 import { apiRequest } from "./queryClient";
+import mammoth from "mammoth";
 
 // Parse CSV file content into an array of row objects
 export function parseCSV(csvContent: string): CsvRow[] {
@@ -40,6 +41,62 @@ export function parseCSV(csvContent: string): CsvRow[] {
     return rows;
   } catch (error) {
     console.error("Error parsing CSV:", error);
+    throw error;
+  }
+}
+
+// Parse text content (from Word docs, text files, etc.) and attempt to extract game data
+export function parseTextContent(textContent: string): CsvRow[] {
+  try {
+    // Remove extra whitespace and split into lines
+    const lines = textContent
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    if (lines.length === 0) {
+      throw new Error("Document is empty");
+    }
+    
+    // Try to identify team names and game information from the text
+    // This is a simplified approach - we're looking for patterns like "Team A vs Team B"
+    const rows: CsvRow[] = [];
+    
+    for (const line of lines) {
+      // Look for patterns like "Team vs Team" or "Team at Team"
+      const vsMatch = line.match(/(.+?)\s+(?:vs\.?|at|@|versus)\s+(.+?)(?:\s+|$)/i);
+      if (vsMatch) {
+        const awayTeam = vsMatch[1].trim();
+        const homeTeam = vsMatch[2].trim();
+        
+        // Create a row with the identified teams
+        rows.push({
+          "homeTeam": homeTeam,
+          "awayTeam": awayTeam,
+          "gameTime": new Date().toISOString(), // Default to current date
+          "homeOdds": "-110", // Default values
+          "awayOdds": "-110",
+          "overUnderLine": "8.5",
+          "overUnderOdds": "-110"
+        });
+      }
+    }
+    
+    return rows;
+  } catch (error) {
+    console.error("Error parsing text content:", error);
+    throw error;
+  }
+}
+
+// Function to extract text from a Word document
+export async function extractWordDocText(file: File): Promise<string> {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  } catch (error) {
+    console.error("Error extracting text from Word document:", error);
     throw error;
   }
 }

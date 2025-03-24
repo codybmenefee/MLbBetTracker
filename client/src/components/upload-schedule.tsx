@@ -3,12 +3,20 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { parseCSV, convertToGames, uploadGames, downloadTemplate } from "@/lib/csv-parser";
+import { 
+  parseCSV, 
+  convertToGames, 
+  uploadGames, 
+  downloadTemplate, 
+  parseTextContent,
+  extractWordDocText
+} from "@/lib/csv-parser";
 import { queryClient } from "@/lib/queryClient";
-import { Upload, ArrowRight } from "lucide-react";
+import { Upload, ArrowRight, FileText } from "lucide-react";
 
 export default function UploadSchedule() {
   const [dragActive, setDragActive] = useState(false);
+  const [processingFile, setProcessingFile] = useState(false);
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
@@ -55,16 +63,48 @@ export default function UploadSchedule() {
     }
   };
 
-  const handleFile = (file: File) => {
-    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+  const handleFile = async (file: File) => {
+    setProcessingFile(true);
+    
+    try {
+      const fileType = file.type;
+      const fileName = file.name.toLowerCase();
+      
+      // Handle different file types
+      if (fileType === "text/csv" || fileName.endsWith(".csv")) {
+        // Handle CSV files
+        processCSVFile(file);
+      } else if (
+        fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || 
+        fileName.endsWith(".docx")
+      ) {
+        // Handle Word documents
+        await processWordFile(file);
+      } else if (
+        fileType === "text/plain" || 
+        fileName.endsWith(".txt")
+      ) {
+        // Handle text files
+        processTextFile(file);
+      } else {
+        toast({
+          title: "Unsupported File Type",
+          description: "Please upload a CSV, Word document, or text file.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please upload a CSV file.",
+        description: `Failed to process file: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
-      return;
+    } finally {
+      setProcessingFile(false);
     }
+  };
 
+  const processCSVFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
@@ -76,11 +116,70 @@ export default function UploadSchedule() {
           throw new Error("No valid games found in the CSV file");
         }
         
+        // Set the game source to "Uploaded Document"
+        games.forEach(game => {
+          game.source = "Uploaded Document";
+        });
+        
         uploadMutation.mutate(games);
       } catch (error) {
         toast({
           title: "Error",
           description: `Failed to parse CSV: ${error instanceof Error ? error.message : "Unknown error"}`,
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const processWordFile = async (file: File) => {
+    try {
+      const textContent = await extractWordDocText(file);
+      const parsedRows = parseTextContent(textContent);
+      const games = convertToGames(parsedRows);
+      
+      if (games.length === 0) {
+        throw new Error("No valid games found in the Word document");
+      }
+      
+      // Set the game source to "Uploaded Document"
+      games.forEach(game => {
+        game.source = "Uploaded Document";
+      });
+      
+      uploadMutation.mutate(games);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to parse Word document: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const processTextFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const textContent = event.target?.result as string;
+        const parsedRows = parseTextContent(textContent);
+        const games = convertToGames(parsedRows);
+        
+        if (games.length === 0) {
+          throw new Error("No valid games found in the text file");
+        }
+        
+        // Set the game source to "Uploaded Document"
+        games.forEach(game => {
+          game.source = "Uploaded Document";
+        });
+        
+        uploadMutation.mutate(games);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: `Failed to parse text file: ${error instanceof Error ? error.message : "Unknown error"}`,
           variant: "destructive",
         });
       }
@@ -122,14 +221,14 @@ export default function UploadSchedule() {
               <Upload className="w-12 h-12 text-gray-400 mb-3" />
               <p className="font-medium mb-1">Drag and drop your file here</p>
               <p className="text-sm text-gray-500 mb-2">or click to browse</p>
-              <p className="text-xs text-gray-400">Accepts CSV files only</p>
+              <p className="text-xs text-gray-400">Accepts CSV, Word (.docx), or text files</p>
               <input
                 type="file"
-                accept=".csv"
+                accept=".csv,.docx,.txt,text/csv,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                 className="hidden"
                 id="file-upload"
                 onChange={handleFileInput}
-                disabled={uploadMutation.isPending}
+                disabled={uploadMutation.isPending || processingFile}
               />
               <label 
                 htmlFor="file-upload" 
@@ -167,9 +266,10 @@ export default function UploadSchedule() {
         </CardHeader>
         <CardContent>
           <ul className="list-disc pl-5 space-y-2 text-gray-700">
-            <li>Make sure your CSV includes team names, start times, and odds</li>
-            <li>Each row should represent a single game</li>
+            <li>CSV files: Include team names, start times, and odds in structured format</li>
+            <li>Word/Text files: Include game matchups in "Team A vs Team B" format, one per line</li>
             <li>The system supports up to 15 games per day</li>
+            <li>For all file types, uploaded games will be marked as from "Uploaded Document"</li>
             <li>For detailed instructions, visit the Help page</li>
           </ul>
         </CardContent>

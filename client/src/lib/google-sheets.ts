@@ -89,7 +89,8 @@ export async function exportToGoogleSheet(): Promise<Export> {
   // If direct export was successful via Google Apps Script, mark the export data as completed
   if (directExportResult && directExportResult.success) {
     exportData.status = "completed";
-    exportData.message = "Successfully exported via Google Apps Script. The data should be visible in your spreadsheet.";
+    // Use errorMessage property from InsertExport schema to store success message
+    exportData.errorMessage = "Successfully exported via Google Apps Script. The data should be visible in your spreadsheet.";
     
     try {
       // Create an export record to track the successful export
@@ -113,7 +114,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
         destination: exportData.destination,
         sheetName: exportData.sheetName,
         status: "completed",
-        createdAt: new Date().toISOString(),
+        exportDate: new Date().toISOString(),
         message: "Direct export was successful. Data should appear in your spreadsheet."
       };
     }
@@ -140,7 +141,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
         destination: exportData.destination,
         sheetName: exportData.sheetName,
         status: "completed",
-        createdAt: new Date().toISOString(),
+        exportDate: new Date().toISOString(),
         message: "Direct export was successful. Data should appear in your spreadsheet."
       };
     }

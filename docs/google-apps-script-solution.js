@@ -1,0 +1,148 @@
+/**
+ * MLB Betting Recommendations - Google Apps Script
+ * 
+ * Instructions:
+ * 1. Open your Google Spreadsheet
+ * 2. Go to Extensions > Apps Script
+ * 3. Paste this entire script
+ * 4. Save and deploy as a web app (Publish > Deploy as web app)
+ *    - Execute as: Me
+ *    - Who has access: Anyone (or specific users/domain)
+ * 5. Copy the web app URL for use in your application
+ */
+
+// Process HTTP POST requests from your app
+function doPost(e) {
+  try {
+    // Parse the JSON data sent from your application
+    const data = JSON.parse(e.postData.contents);
+    const recommendations = data.recommendations;
+    
+    if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: "No valid recommendations data provided"
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get the active spreadsheet and sheet (or create a new sheet)
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetName = data.sheetName || "MLB Recommendations";
+    
+    // Try to get the sheet if it exists, otherwise create it
+    let sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    }
+    
+    // Clear previous content and format the sheet
+    sheet.clear();
+    
+    // Set up headers
+    const headers = ["Game", "Bet Type", "Odds", "Confidence", "Prediction", "Generated At", "Date Exported"];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    
+    // Format header row
+    sheet.getRange(1, 1, 1, headers.length)
+      .setBackground("#4285F4")
+      .setFontColor("white")
+      .setFontWeight("bold");
+    
+    // Prepare data rows
+    const rows = recommendations.map(rec => [
+      rec.game,
+      rec.betType,
+      rec.odds,
+      `${rec.confidence}%`,
+      rec.prediction,
+      new Date(rec.generatedAt).toLocaleString(),
+      new Date().toLocaleString()
+    ]);
+    
+    // Write data to sheet
+    if (rows.length > 0) {
+      sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+    }
+    
+    // Auto-size columns for better readability
+    for (let i = 1; i <= headers.length; i++) {
+      sheet.autoResizeColumn(i);
+    }
+    
+    // Add alternating row colors
+    if (rows.length > 0) {
+      for (let i = 0; i < rows.length; i++) {
+        if (i % 2 === 1) {
+          sheet.getRange(i + 2, 1, 1, headers.length).setBackground("#f3f3f3");
+        }
+      }
+    }
+    
+    // Return success response
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: `Successfully exported ${rows.length} recommendations to sheet "${sheetName}"`,
+      updatedAt: new Date().toISOString()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    // Return error response
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Process HTTP GET requests (for testing)
+function doGet() {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "The API is running",
+    instructions: "Send POST requests with recommendation data to use this endpoint"
+  }))
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Test function - can be run directly from the Apps Script editor
+ * to test the functionality with sample data
+ */
+function testWithSampleData() {
+  const sampleData = {
+    recommendations: [
+      {
+        game: "New York Yankees vs Boston Red Sox",
+        betType: "Moneyline",
+        odds: "-150",
+        confidence: 75,
+        prediction: "Yankees Win",
+        generatedAt: new Date().toISOString()
+      },
+      {
+        game: "Los Angeles Dodgers vs San Francisco Giants",
+        betType: "Run Line (-1.5)",
+        odds: "+120",
+        confidence: 65,
+        prediction: "Dodgers Cover",
+        generatedAt: new Date().toISOString()
+      }
+    ],
+    sheetName: "Test Data"
+  };
+  
+  // Simulate a POST request
+  const mockE = {
+    postData: {
+      contents: JSON.stringify(sampleData)
+    }
+  };
+  
+  // Process the mock request
+  const result = doPost(mockE);
+  
+  // Log the result
+  Logger.log(result.getContent());
+}

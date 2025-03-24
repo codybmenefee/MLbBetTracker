@@ -227,7 +227,7 @@ export default function SettingsPage() {
  * 3. Paste this entire script
  * 4. Save and deploy as a web app (Publish > Deploy as web app)
  *    - Execute as: Me
- *    - Who has access: Anyone (or specific users/domain)
+ *    - Who has access: Anyone
  * 5. Copy the web app URL for use in your application
  */
 
@@ -239,11 +239,10 @@ function doPost(e) {
     const recommendations = data.recommendations;
     
     if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
-      return ContentService.createTextOutput(JSON.stringify({
+      return createCORSResponse({
         success: false,
         error: "No valid recommendations data provided"
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+      });
     }
     
     // Get the active spreadsheet and sheet (or create a new sheet)

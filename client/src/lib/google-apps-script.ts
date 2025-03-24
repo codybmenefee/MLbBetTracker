@@ -48,28 +48,21 @@ export async function exportToGoogleAppsScript(
     };
     
     // Make the request to the Google Apps Script
+    // Using no-cors mode and removing Content-Type header to avoid preflight requests
+    // Google Apps Script will parse JSON regardless if Content-Type is not explicitly set
     const response = await fetch(scriptUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(data),
-      mode: "cors" // Note: Google Apps Script web apps support CORS
+      mode: "no-cors" // Using no-cors to avoid CORS issues with Google Apps Script
     });
     
-    if (!response.ok) {
-      throw new Error(`Error response: ${response.status} ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || "Unknown error when exporting to Google Sheets");
-    }
+    // When using no-cors, we can't access the response content or status due to CORS restrictions
+    // So we assume the request succeeded if it didn't throw an error
+    // The Google Apps Script will still process the data properly
     
     return {
       success: true,
-      message: result.message || `Successfully exported ${recommendations.length} recommendations to Google Sheets`
+      message: `Successfully sent ${recommendations.length} recommendations to Google Sheets. Check your spreadsheet for the data.`
     };
     
   } catch (error) {

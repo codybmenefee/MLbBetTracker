@@ -45,8 +45,24 @@ export default function RecommendationsPanel() {
       queryClient.invalidateQueries({ queryKey: ["/api/exports"] });
       queryClient.invalidateQueries({ queryKey: ["/api/exports/latest"] });
       
-      // Optional: Open the sheet in a new tab
+      // Show detailed message if available
+      if (data.message) {
+        toast({
+          title: "Export Details",
+          description: data.message,
+          duration: 5000,
+        });
+      }
+      
+      // Open the sheet in a new tab
       window.open(data.destination, "_blank");
+      
+      // In production, we would add instructions to authorize the Google Sheets API
+      toast({
+        title: "Next Steps",
+        description: "For production use, you would need to configure the Google Sheets API credentials to allow writing data.",
+        duration: 6000,
+      });
     },
     onError: (error) => {
       toast({

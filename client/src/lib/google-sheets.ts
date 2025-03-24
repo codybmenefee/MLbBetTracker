@@ -16,6 +16,15 @@ export async function exportToGoogleSheet(): Promise<Export> {
 
   const config = JSON.parse(configStr);
   
+  // Validate Google Sheet URL
+  if (!config.googleSheetUrl) {
+    throw new Error("Google Sheet URL is missing. Please configure it in Settings.");
+  }
+  
+  if (!config.googleSheetUrl.includes("docs.google.com/spreadsheets")) {
+    throw new Error("Invalid Google Sheets URL. Please enter a valid Google Sheets URL in Settings.");
+  }
+  
   // Prepare the export request data
   const exportData: InsertExport = {
     destination: config.googleSheetUrl,
@@ -32,6 +41,7 @@ export async function exportToGoogleSheet(): Promise<Export> {
 
   // Invalidate exports cache
   queryClient.invalidateQueries({ queryKey: ["/api/exports"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/exports/latest"] });
   
   return response;
 }

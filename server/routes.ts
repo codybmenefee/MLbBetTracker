@@ -7,6 +7,7 @@ import {
   insertExportSchema, 
   csvRowSchema 
 } from "@shared/schema";
+import { exportRecommendationsToSheet } from "./google-sheets";
 import { ZodError } from "zod";
 
 import OpenAI from "openai";
@@ -237,7 +238,7 @@ CRITICAL REQUIREMENTS:
     }
   });
 
-  // Create a new export (simulating Google Sheets export)
+  // Create a new export to Google Sheets
   app.post("/api/exports", async (req: Request, res: Response) => {
     try {
       const exportRequest = req.body;
@@ -246,20 +247,42 @@ CRITICAL REQUIREMENTS:
       if (recommendations.length === 0) {
         return res.status(400).json({ message: "No recommendations to export" });
       }
-
-      // Simulate Google Sheets API call in a real implementation
-      // Here, we'll just simulate success/failure and add a delay
+      
+      // Log export details for debugging
+      console.log(`Exporting recommendations to sheet: ${exportRequest.destination}, tab: ${exportRequest.sheetName}`);
+      
+      // Call the mock Google Sheets export function
+      // In production, this would use the actual Google Sheets API
+      const exportResult = await exportRecommendationsToSheet(
+        recommendations,
+        exportRequest.destination,
+        exportRequest.sheetName
+      );
+      
+      // Set the export status based on the result
+      const exportStatus = exportResult.success ? "completed" : "failed";
+      
+      // Create the export record
       const exportData = {
         ...exportRequest,
-        status: "completed", // Updates the status from "pending" to "completed"
-        exportedData: recommendations
+        status: exportStatus,
+        exportedData: recommendations,
+        errorMessage: exportResult.success ? null : exportResult.message
       };
 
       // Validate the export data
       const validatedExport = insertExportSchema.parse(exportData);
       const savedExport = await storage.createExport(validatedExport);
+      
+      // Add the message from the export function to the response
+      const exportedResult = {
+        ...savedExport,
+        message: exportResult.message
+      };
 
-      res.status(201).json(savedExport);
+      // Return success or error based on the export result
+      const statusCode = exportResult.success ? 201 : 400;
+      res.status(statusCode).json(exportedResult);
     } catch (err) {
       handleError(err, res);
     }

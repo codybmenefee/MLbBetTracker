@@ -61,7 +61,9 @@ export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;
 export type Recommendation = typeof recommendations.$inferSelect;
 
 export type InsertExport = z.infer<typeof insertExportSchema>;
-export type Export = typeof exports.$inferSelect;
+export type Export = typeof exports.$inferSelect & {
+  message?: string; // Additional field for client messages (not stored in database)
+};
 
 // CSV schema for validation - more flexible to accept any header format
 export const csvRowSchema = z.record(z.string(), z.string());

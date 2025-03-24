@@ -9,6 +9,8 @@
  *    - Execute as: Me
  *    - Who has access: Anyone (or specific users/domain)
  * 5. Copy the web app URL for use in your application
+ * 6. Also copy your Spreadsheet ID from the URL: docs.google.com/spreadsheets/d/<ID>/edit
+ *    You'll need this ID for the integration to work properly in production environments
  */
 
 // Process HTTP POST requests from your app

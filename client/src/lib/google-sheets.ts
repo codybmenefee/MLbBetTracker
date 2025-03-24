@@ -30,10 +30,13 @@ export async function exportToGoogleSheet(): Promise<Export> {
   // Get today's date in format 'YYYY-MM-DD'
   const today = new Date().toISOString().split('T')[0];
   
+  // Always use today's date in the sheet name
+  const sheetName = `MLB Betting Recommendations ${today}`;
+  
   // Prepare the export request data
   const exportData: InsertExport = {
     destination: config.googleSheetUrl,
-    sheetName: config.googleSheetName || `MLB Betting Recommendations ${today}`,
+    sheetName: sheetName,
     status: "pending"
   };
 
@@ -57,10 +60,11 @@ export async function exportToGoogleSheet(): Promise<Export> {
   if (appsScriptUrl && isValidGoogleAppsScriptUrl(appsScriptUrl) && recommendations.length > 0) {
     try {
       // Attempt to export directly via Google Apps Script
+      // Always use the dynamic sheet name with today's date
       directExportResult = await exportToGoogleAppsScript(
         recommendations,
         appsScriptUrl,
-        config.googleSheetName || `MLB Betting Recommendations ${today}`
+        sheetName
       );
       
       if (directExportResult.success) {

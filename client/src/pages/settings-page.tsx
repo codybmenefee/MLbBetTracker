@@ -82,13 +82,20 @@ export default function SettingsPage() {
   }, []);
 
   const onSheetsSubmit = (data: GoogleSheetsFormValues) => {
+    // Always use today's date in the sheet name regardless of what was entered
+    const today = new Date().toISOString().split('T')[0];
+    const updatedData = {
+      ...data,
+      googleSheetName: `MLB Betting Recommendations ${today}`
+    };
+    
     // Save to localStorage
-    localStorage.setItem("googleSheetsConfig", JSON.stringify(data));
-    setSavedSheetsSettings(data);
+    localStorage.setItem("googleSheetsConfig", JSON.stringify(updatedData));
+    setSavedSheetsSettings(updatedData);
     
     toast({
       title: "Settings saved",
-      description: "Your Google Sheets configuration has been updated.",
+      description: "Your Google Sheets configuration has been updated. The sheet name will always include today's date.",
     });
   };
 

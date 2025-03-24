@@ -41,23 +41,23 @@ export default function Sidebar() {
       
       <nav className="p-2">
         {navItems.map((item) => (
-          <Link key={item.path} href={item.path}>
-            <div 
-              className={cn(
-                "flex items-center p-3 mb-1 rounded-md cursor-pointer",
-                location === item.path 
-                  ? "bg-blue-100 text-primary" 
-                  : "text-neutral hover:bg-blue-50"
-              )}
-            >
-              <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-              <span className={cn(
-                "transition-opacity whitespace-nowrap",
-                collapsed ? "opacity-0 w-0 hidden" : "opacity-100"
-              )}>
-                {item.label}
-              </span>
-            </div>
+          <Link 
+            key={item.path} 
+            href={item.path}
+            className={cn(
+              "flex items-center p-3 mb-1 rounded-md cursor-pointer",
+              location === item.path 
+                ? "bg-blue-100 text-primary" 
+                : "text-neutral hover:bg-blue-50"
+            )}
+          >
+            <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+            <span className={cn(
+              "transition-opacity whitespace-nowrap",
+              collapsed ? "opacity-0 w-0 hidden" : "opacity-100"
+            )}>
+              {item.label}
+            </span>
           </Link>
         ))}
       </nav>

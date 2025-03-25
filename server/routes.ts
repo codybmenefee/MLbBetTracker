@@ -5,7 +5,8 @@ import {
   insertGameSchema, 
   insertRecommendationSchema, 
   insertExportSchema, 
-  csvRowSchema 
+  csvRowSchema,
+  Game
 } from "@shared/schema";
 import { exportRecommendationsToSheet } from "./google-sheets";
 import { fetchMLBGames, refreshMLBGames } from "./odds-api";
@@ -431,7 +432,7 @@ Chicago Cubs,St. Louis Cardinals,2025-03-23 20:15,+110,-130,9.0,-110`;
       // We'll reuse the same code from the /api/recommendations/generate endpoint
       
       // Format games for OpenAI prompt
-      const gamesForPrompt = refreshedGames.map((game: Game) => ({
+      const gamesForPrompt = refreshedGames.map((game: any) => ({
         homeTeam: game.homeTeam,
         awayTeam: game.awayTeam,
         gameTime: game.gameTime,

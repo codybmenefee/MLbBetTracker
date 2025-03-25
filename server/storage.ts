@@ -114,11 +114,12 @@ export class MemStorage implements IStorage {
       // First copy all fields from the input recommendation
       ...recommendation,
       // Then ensure required fields have defaults
-      gameSource: 'Manual Input',
-      betTypeSource: 'LLM',
-      oddsSource: 'LLM',
-      confidenceSource: 'LLM',
-      predictionSource: 'LLM'
+      gameSource: recommendation.gameSource || 'Manual Input',
+      betTypeSource: recommendation.betTypeSource || 'LLM',
+      oddsSource: recommendation.oddsSource || 'LLM',
+      confidenceSource: recommendation.confidenceSource || 'LLM',
+      predictionSource: recommendation.predictionSource || 'LLM',
+      analysis: recommendation.analysis || null
     };
     
     // Now create the final Recommendation with the provided values plus defaults

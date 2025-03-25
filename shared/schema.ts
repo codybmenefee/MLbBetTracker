@@ -107,6 +107,19 @@ export const updateBetResultSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Update schema for editing bet details
+export const updateBetSchema = z.object({
+  id: z.number(),
+  date: z.string().min(1, "Date is required"),
+  game: z.string().min(1, "Game is required"),
+  betType: z.string().min(1, "Bet type is required"),
+  odds: z.string().min(1, "Odds are required"),
+  confidence: z.coerce.number().min(1).max(100, "Confidence must be between 1-100"),
+  betAmount: z.coerce.number().positive("Bet amount must be positive"),
+  predictedResult: z.string().min(1, "Predicted result is required"),
+  notes: z.string().optional(),
+});
+
 // Types
 export type InsertGame = z.infer<typeof insertGameSchema>;
 export type Game = typeof games.$inferSelect;
@@ -126,6 +139,7 @@ export type InsertBetHistory = z.infer<typeof insertBetHistorySchema>;
 export type BetHistory = typeof betHistory.$inferSelect;
 
 export type UpdateBetResult = z.infer<typeof updateBetResultSchema>;
+export type UpdateBet = z.infer<typeof updateBetSchema>;
 
 // CSV schema for validation - more flexible to accept any header format
 export const csvRowSchema = z.record(z.string(), z.string());

@@ -144,6 +144,7 @@ For each recommendation, provide:
 3. Odds (in American format)
 4. Confidence (as a percentage from 1-100%)
 5. Prediction (simple outcome like "Team A Win", "Over", "Team B Cover")
+6. Analysis (a single paragraph explaining your reasoning and justification for this prediction)
 
 Return your recommendations in exactly this JSON format, with no deviations:
 {
@@ -479,6 +480,7 @@ For each recommendation, provide:
 3. Odds (in American format)
 4. Confidence (as a percentage from 1-100%)
 5. Prediction (simple outcome like "Team A Win", "Over", "Team B Cover")
+6. Analysis (a single paragraph explaining your reasoning and justification for this prediction)
 
 Return your recommendations in exactly this JSON format, with no deviations:
 {

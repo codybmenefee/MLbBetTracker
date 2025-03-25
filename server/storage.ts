@@ -4,7 +4,7 @@ import {
   exports, type Export, type InsertExport,
   bankrollSettings, type BankrollSettings, type InsertBankrollSettings,
   betHistory, type BetHistory, type InsertBetHistory,
-  type UpdateBetResult
+  type UpdateBetResult, type UpdateBet
 } from "@shared/schema";
 import fs from 'fs';
 import path from 'path';
@@ -38,6 +38,7 @@ export interface IStorage {
   getBetHistory(): Promise<BetHistory[]>;
   getBetById(id: number): Promise<BetHistory | undefined>;
   createBet(bet: InsertBetHistory): Promise<BetHistory>;
+  updateBet(update: UpdateBet): Promise<BetHistory>;
   updateBetResult(update: UpdateBetResult): Promise<BetHistory>;
   getBetsByRecommendationId(recommendationId: number): Promise<BetHistory[]>;
 }
@@ -232,6 +233,30 @@ export class MemStorage implements IStorage {
     
     this.betHistoryData.set(id, newBet);
     return newBet;
+  }
+  
+  async updateBet(update: UpdateBet): Promise<BetHistory> {
+    const bet = this.betHistoryData.get(update.id);
+    if (!bet) {
+      throw new Error(`Bet with ID ${update.id} not found`);
+    }
+    
+    // Update the bet details without changing the result or calculating profit/loss
+    const updatedBet: BetHistory = {
+      ...bet,
+      date: new Date(update.date),
+      game: update.game,
+      betType: update.betType,
+      odds: update.odds,
+      confidence: update.confidence,
+      betAmount: update.betAmount,
+      predictedResult: update.predictedResult,
+      notes: update.notes || bet.notes,
+      updatedAt: new Date()
+    };
+    
+    this.betHistoryData.set(update.id, updatedBet);
+    return updatedBet;
   }
   
   async updateBetResult(update: UpdateBetResult): Promise<BetHistory> {

@@ -225,48 +225,17 @@ export default function LiveOddsDashboard() {
             <Alert>
               <AlertTitle>No games data</AlertTitle>
               <AlertDescription>
-                There are no MLB games data available. Use the "Refresh Games" button to fetch today's games and odds.
+                There are no MLB games data available. Use the refresh button in the sidebar to fetch today's games and odds.
               </AlertDescription>
             </Alert>
           )}
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isLoading}
-            onClick={() => refreshMutation.mutate()}
-          >
-            {refreshMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Refreshing...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Games
-              </>
-            )}
-          </Button>
-          
-          <Button
-            size="sm"
-            disabled={isLoading || !hasGames}
-            onClick={() => generateMutation.mutate()}
-          >
-            {generateMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                Generate Recommendations
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </>
-            )}
-          </Button>
+        <CardFooter>
+          <div className="w-full text-center">
+            <p className="text-sm text-muted-foreground">
+              Data refreshes automatically daily. You can also manually refresh using the refresh button in the sidebar.
+            </p>
+          </div>
         </CardFooter>
       </Card>
       

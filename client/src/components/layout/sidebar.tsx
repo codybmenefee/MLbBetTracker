@@ -1,11 +1,46 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { CalendarDays, Sparkles, FolderOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, Sparkles, FolderOpen, Settings, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { toast } = useToast();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Mutation to refresh data (games and recommendations)
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      setIsRefreshing(true);
+      return await apiRequest({
+        url: "/api/scheduler/trigger",
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Data Refresh",
+        description: "Game data and recommendations refresh has been triggered.",
+      });
+      setTimeout(() => setIsRefreshing(false), 1000); // Visual feedback even if it's quick
+    },
+    onError: (error) => {
+      toast({
+        title: "Refresh Error",
+        description: error.message || "Failed to refresh data.",
+        variant: "destructive",
+      });
+      setIsRefreshing(false);
+    },
+  });
+
+  const handleRefresh = () => {
+    refreshMutation.mutate();
+  };
 
   const navItems = [
     { path: "/", label: "Today's Schedule", icon: CalendarDays },
@@ -30,12 +65,28 @@ export default function Sidebar() {
         )}>
           MLB Bets
         </h1>
-        <button 
-          onClick={() => setCollapsed(!collapsed)} 
-          className="text-neutral p-1 rounded-md hover:bg-gray-100"
-        >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+        <div className="flex items-center">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={cn(
+              "text-neutral p-2 rounded-md hover:bg-gray-100 mr-1",
+              isRefreshing ? "opacity-50 cursor-not-allowed" : ""
+            )}
+            title="Refresh all data"
+          >
+            <RefreshCw 
+              size={20} 
+              className={isRefreshing ? "animate-spin" : ""}
+            />
+          </button>
+          <button 
+            onClick={() => setCollapsed(!collapsed)} 
+            className="text-neutral p-1 rounded-md hover:bg-gray-100"
+          >
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+        </div>
       </div>
       
       <nav className="p-2">

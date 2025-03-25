@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { scheduler } from "./scheduler";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -66,5 +68,12 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Initialize the scheduler with storage
+    Object.assign(scheduler, { storage });
+    scheduler.initialize().catch(err => {
+      console.error('Failed to initialize scheduler:', err);
+    });
+    log('Scheduler initialized for daily data refresh');
   });
 })();

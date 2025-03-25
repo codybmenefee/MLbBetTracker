@@ -10,6 +10,7 @@ import {
 } from "@shared/schema";
 import { exportRecommendationsToSheet } from "./google-sheets";
 import { fetchMLBGames, refreshMLBGames } from "./odds-api";
+import { scheduler } from "./scheduler";
 import { ZodError } from "zod";
 
 import OpenAI from "openai";

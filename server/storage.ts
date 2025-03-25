@@ -33,6 +33,9 @@ export interface IStorage {
   getBankrollSettings(): Promise<BankrollSettings | undefined>;
   setBankrollSettings(settings: InsertBankrollSettings): Promise<BankrollSettings>;
   updateBankrollAmount(newAmount: number): Promise<BankrollSettings>;
+  resetBankroll(initialAmount: number): Promise<BankrollSettings>;
+  backupBankrollSettings(): Promise<BankrollSettings | undefined>;
+  restoreBankrollSettings(): Promise<BankrollSettings | undefined>;
   
   // Bet history operations
   getBetHistory(): Promise<BetHistory[]>;

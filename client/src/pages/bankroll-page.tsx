@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +48,8 @@ import {
   DollarSign, 
   TrendingUp, 
   TrendingDown,
+  ChevronDown,
+  ChevronUp,
   BarChart3
 } from "lucide-react";
 import { z } from "zod";
@@ -100,6 +102,8 @@ export default function BankrollPage() {
   const [activeBet, setActiveBet] = useState<number | null>(null);
   const [isAddBetDialogOpen, setIsAddBetDialogOpen] = useState(false);
   const [isUpdateResultDialogOpen, setIsUpdateResultDialogOpen] = useState(false);
+  const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
+  const [expandedBetId, setExpandedBetId] = useState<number | null>(null);
 
   // Fetch bankroll settings
   const bankrollQuery = useQuery({
@@ -287,6 +291,83 @@ export default function BankrollPage() {
       betForm.setValue("confidence", recommendation.confidence);
       betForm.setValue("predictedResult", recommendation.prediction);
     }
+  };
+  
+  // Helper function to toggle expanded details for a bet
+  const handleToggleDetails = (betId: number) => {
+    if (expandedBetId === betId) {
+      setExpandedBetId(null);
+    } else {
+      setExpandedBetId(betId);
+    }
+  };
+  
+  // Helper function to handle editing a bet
+  const handleEditBet = (betId: number) => {
+    setActiveBet(betId);
+    setIsEditBetDialogOpen(true);
+    
+    // Find the bet and set default form values
+    const bet = betsQuery.data?.find(b => b.id === betId);
+    if (bet) {
+      betForm.reset({
+        date: new Date(bet.date).toISOString().split('T')[0],
+        game: bet.game,
+        betType: bet.betType,
+        odds: bet.odds,
+        confidence: bet.confidence,
+        betAmount: bet.betAmount,
+        predictedResult: bet.predictedResult,
+        notes: bet.notes || "",
+        recommendationId: bet.recommendationId
+      });
+    }
+  };
+  
+  // Edit bet mutation
+  const editBetMutation = useMutation({
+    mutationFn: async (data: BetFormValues & { id: number }) => {
+      return apiRequest({
+        url: `/api/bets/${data.id}`,
+        method: "PUT",
+        body: {
+          date: data.date,
+          game: data.game,
+          betType: data.betType,
+          odds: data.odds,
+          confidence: data.confidence,
+          betAmount: data.betAmount,
+          predictedResult: data.predictedResult,
+          notes: data.notes,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bets"] });
+      setIsEditBetDialogOpen(false);
+      setActiveBet(null);
+      toast({
+        title: "Bet updated",
+        description: "The bet details have been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update bet details.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle edit bet form submission
+  const onEditBetSubmit = (data: BetFormValues) => {
+    if (activeBet === null) return;
+    
+    editBetMutation.mutate({
+      ...data,
+      id: activeBet,
+    });
   };
   
   // Calculate statistics
@@ -849,6 +930,148 @@ export default function BankrollPage() {
                 </Button>
                 <Button type="submit" disabled={updateResultMutation.isPending}>
                   {updateResultMutation.isPending ? "Updating..." : "Update Result"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Bet Dialog */}
+      <Dialog open={isEditBetDialogOpen} onOpenChange={setIsEditBetDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Bet</DialogTitle>
+            <DialogDescription>
+              Update the details of this bet
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...betForm}>
+            <form onSubmit={betForm.handleSubmit(onEditBetSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={betForm.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={betForm.control}
+                  name="betAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bet Amount</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+                          <Input {...field} type="number" step="0.01" min="0" className="pl-8" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={betForm.control}
+                  name="game"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Game</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Yankees vs. Red Sox" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={betForm.control}
+                  name="betType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bet Type</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Moneyline" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={betForm.control}
+                  name="odds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Odds</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. -110" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={betForm.control}
+                  name="confidence"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confidence (%)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min="1" max="100" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={betForm.control}
+                name="predictedResult"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Predicted Outcome</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g. Yankees Win" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={betForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Any additional notes about this bet" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditBetDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editBetMutation.isPending}>
+                  {editBetMutation.isPending ? "Saving..." : "Save Changes"}
                 </Button>
               </DialogFooter>
             </form>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { CalendarDays, Sparkles, FolderOpen, Settings, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { CalendarDays, Sparkles, FolderOpen, Settings, ChevronLeft, ChevronRight, RefreshCw, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -45,6 +45,7 @@ export default function Sidebar() {
   const navItems = [
     { path: "/", label: "Today's Schedule", icon: CalendarDays },
     { path: "/recommendations", label: "AI Recommendations", icon: Sparkles },
+    { path: "/bankroll", label: "Bankroll Manager", icon: DollarSign },
     { path: "/logs", label: "View Logs", icon: FolderOpen },
     { path: "/settings", label: "Settings", icon: Settings },
   ];

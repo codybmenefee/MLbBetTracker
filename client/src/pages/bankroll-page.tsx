@@ -128,7 +128,7 @@ export default function BankrollPage() {
       return apiRequest({
         url: "/api/bankroll",
         method: "POST",
-        data,
+        body: data,
       });
     },
     onSuccess: () => {
@@ -153,7 +153,7 @@ export default function BankrollPage() {
       return apiRequest({
         url: "/api/bets",
         method: "POST",
-        data,
+        body: data,
       });
     },
     onSuccess: () => {
@@ -180,7 +180,7 @@ export default function BankrollPage() {
       return apiRequest({
         url: `/api/bets/${data.id}/result`,
         method: "PUT",
-        data: {
+        body: {
           actualResult: data.actualResult,
           notes: data.notes,
         },

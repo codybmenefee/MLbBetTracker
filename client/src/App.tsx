@@ -8,6 +8,7 @@ import SchedulePage from "@/pages/schedule-page";
 import RecommendationsPage from "@/pages/recommendations-page";
 import LogsPage from "@/pages/logs-page";
 import SettingsPage from "@/pages/settings-page";
+import BankrollPage from "@/pages/bankroll-page";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
         <Switch>
           <Route path="/" component={SchedulePage} />
           <Route path="/recommendations" component={RecommendationsPage} />
+          <Route path="/bankroll" component={BankrollPage} />
           <Route path="/logs" component={LogsPage} />
           <Route path="/settings" component={SettingsPage} />
           <Route component={NotFound} />

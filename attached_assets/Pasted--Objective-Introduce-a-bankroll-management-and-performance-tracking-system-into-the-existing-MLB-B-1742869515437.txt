@@ -1,0 +1,158 @@
+🎯 Objective
+Introduce a bankroll management and performance tracking system into the existing MLB Betting Tracker app. This will allow the user to:
+
+Set an initial bankroll amount
+
+Track win/loss and PnL (profit/loss) for each recommendation
+
+Manually update bet results (Win/Loss)
+
+Calculate ongoing bankroll over time
+
+Visualize system performance to ultimately grade ChatGPT’s betting accuracy
+
+🔧 Key Features
+1. Initial Bankroll Setup
+Let user enter a starting bankroll (e.g., $500)
+
+Persist this value across sessions
+
+Display current bankroll in the UI (e.g., in header or sidebar)
+
+2. Bet History Logging
+All daily bets (JSON output from GPT) will be saved as historical entries
+
+Each row should include:
+
+Date
+
+Teams / Game
+
+Bet Type
+
+Bet Amount
+
+Odds
+
+Confidence
+
+GPT-predicted outcome (Win/Loss)
+
+Actual result (to be updated by user)
+
+Profit/Loss
+
+Running Bankroll
+
+Notes
+
+3. Manual Result Update Interface
+Allow user to mark each bet as:
+
+✅ Win
+
+❌ Loss
+
+➖ Pending (default)
+
+Upon marking:
+
+Calculate actual Profit/Loss using odds and bet amount
+
+Update cumulative bankroll accordingly
+
+Store results persistently
+
+4. Bankroll Tracker UI
+Display running bankroll and update it based on bet results
+
+Show summary stats:
+
+Total Bets
+
+Win Rate
+
+ROI
+
+Longest Win/Loss Streak (optional)
+
+AI Grade (based on performance vs. confidence scores)
+
+📊 Optional Future Visualizations (Scoped Separately)
+Chart: bankroll over time (line graph)
+
+Chart: Win/Loss record (bar or pie chart)
+
+Heatmap of performance by team, bet type, confidence
+
+📂 Data Model
+Each Bet Entry should include:
+
+json
+Copy
+Edit
+{
+  "date": "2025-03-24",
+  "game": "Yankees vs. Red Sox",
+  "bet_type": "Moneyline",
+  "odds": "-110",
+  "confidence": "High",
+  "amount": 50,
+  "predicted_result": "win",
+  "actual_result": "win",
+  "profit_loss": 45.45,
+  "bankroll_after": 545.45,
+  "notes": "Yankees trending strong"
+}
+🏗️ Architecture Overview
+Frontend (React)
+Input: Bankroll setup field
+
+Component: Daily bet list with editable results (Win/Loss toggle)
+
+Component: Bankroll summary display
+
+Optional: Modal or table view to edit historical entries
+
+Backend / Storage
+Store history in:
+
+Google Sheets (temporary) OR
+
+Firebase / Supabase (preferred for production scale)
+
+Calculate and persist bankroll as bets are updated
+
+Use unique bet IDs (e.g., hash of game + date)
+
+GPT Output Flow (Updated)
+When bets are generated, append with:
+
+predicted_result (from GPT)
+
+actual_result: null (initial)
+
+profit_loss: 0
+
+bankroll_after: placeholder
+
+Sheet Integration (if still used)
+Append new sheet rows daily
+
+Enable lookup/editing of past rows via frontend
+
+🔐 Permissions / Auth
+For now, single-user (no login required)
+
+If app expands to multiple users, this feature should be designed to support per-user data
+
+📝 Deliverables
+Working feature integrated into existing frontend
+
+Persistent bankroll and bet history tracking
+
+Manual result editor UI
+
+Profit/loss calculations and bankroll updates
+
+Updated README or walkthrough of logic

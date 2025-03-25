@@ -191,7 +191,9 @@ export async function exportToGoogleSheet(): Promise<Export> {
         sheetName: exportData.sheetName,
         status: "completed",
         exportDate: new Date(),  // Fixed: use Date object instead of string
-        message: "Direct export was successful. Data should appear in your spreadsheet."
+        errorMessage: "Direct export was successful. Data should appear in your spreadsheet.",
+        exportedData: null,
+        message: "Direct export was successful. Data should appear in your spreadsheet." // For client display
       };
     }
     

@@ -21,20 +21,28 @@ export async function exportToGoogleSheet(): Promise<Export> {
   
   // If we have direct integration but no Google Sheets config, create a config with the actual sheet URL
   if (hasDirectIntegration && !configStr) {
-    // Use the script URL to try to extract the spreadsheet URL
-    // Format: https://script.google.com/macros/s/[ID]/exec
-    // We need to extract just the base script URL and try to determine the sheet URL
+    // Check if we have a spreadsheetId to construct the actual Google Sheets URL
+    let sheetUrl = "";
     
-    // We don't need to open the script URL directly anymore, just show a toast
+    if (spreadsheetId) {
+      // Construct an actual Google Sheets URL from the spreadsheetId
+      sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+    } else {
+      // If no spreadsheetId is available, we'll use the script URL as a fallback
+      // but mark it specially so we can handle it differently for redirection
+      sheetUrl = appsScriptUrl.replace("/exec", "").concat("?source=direct-integration");
+    }
+    
+    // Show a toast explaining what's happening
     toast({
       title: "Using Google Apps Script Integration",
       description: "Your data will be sent directly to your Google Sheet using the Apps Script integration.",
       duration: 5000,
     });
     
-    // For tracking purposes, still store a record with a special URL
+    // Store a record with either the actual sheet URL or a special URL
     config = { 
-      googleSheetUrl: appsScriptUrl.replace("/exec", "").concat("?source=direct-integration") 
+      googleSheetUrl: sheetUrl
     };
   } else if (!configStr) {
     throw new Error("Google Sheets configuration not found and no Apps Script integration is set up. Please configure in Settings.");
@@ -97,9 +105,9 @@ export async function exportToGoogleSheet(): Promise<Export> {
       // Always use the dynamic sheet name with today's date
       directExportResult = await exportToGoogleAppsScript(
         recommendations,
-        appsScriptUrl,
+        appsScriptUrl || "", // Ensure appsScriptUrl is never null
         sheetName,
-        spreadsheetId
+        spreadsheetId || undefined // Ensure spreadsheetId is either string or undefined
       );
       
       if (directExportResult.success) {
@@ -154,7 +162,9 @@ export async function exportToGoogleSheet(): Promise<Export> {
         sheetName: exportData.sheetName,
         status: "completed",
         exportDate: new Date(),  // Fixed: use Date object instead of string
-        message: "Direct export was successful. Data should appear in your spreadsheet."
+        errorMessage: "Direct export was successful. Data should appear in your spreadsheet.",
+        exportedData: null,
+        message: "Direct export was successful. Data should appear in your spreadsheet." // For client display
       };
     }
   }

@@ -180,10 +180,34 @@ export default function RecommendationsPanel() {
         });
       }
       
-      // Open the sheet in a new tab
-      window.open(data.destination, "_blank");
+      // Open the sheet in a new tab if it's a valid Google Sheets URL
+      const destination = data.destination || "";
       
-      // In production, we would add instructions to authorize the Google Sheets API
+      if (destination.includes("docs.google.com/spreadsheets")) {
+        // This is an actual Google Sheets URL, open it directly
+        window.open(destination, "_blank");
+      } else if (destination.includes("script.google.com") && destination.includes("source=direct-integration")) {
+        // This is a script URL with our special marker
+        // Get the spreadsheet ID from localStorage
+        const spreadsheetId = localStorage.getItem("googleSpreadsheetId");
+        
+        if (spreadsheetId) {
+          // If we have the spreadsheet ID, open the actual Google Sheet
+          window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`, "_blank");
+        } else {
+          // If we don't have the spreadsheet ID, show a toast with instructions
+          toast({
+            title: "Spreadsheet ID Missing",
+            description: "For direct Google Sheets access, add your Spreadsheet ID in the Settings page. Check your spreadsheet for the exported data.",
+            duration: 7000,
+          });
+        }
+      } else {
+        // Fallback: Just try to open whatever destination we have
+        window.open(destination, "_blank");
+      }
+      
+      // Production note toast
       toast({
         title: "Next Steps",
         description: "For production use, you would need to configure the Google Sheets API credentials to allow writing data.",

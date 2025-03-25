@@ -6,6 +6,9 @@ import {
   betHistory, type BetHistory, type InsertBetHistory,
   type UpdateBetResult
 } from "@shared/schema";
+import fs from 'fs';
+import path from 'path';
+import { log } from './vite';
 
 export interface IStorage {
   // Game operations
@@ -40,16 +43,16 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private gamesData: Map<number, Game>;
-  private recommendationsData: Map<number, Recommendation>;
-  private exportsData: Map<number, Export>;
-  private bankrollSettingsData: BankrollSettings | undefined;
-  private betHistoryData: Map<number, BetHistory>;
+  protected gamesData: Map<number, Game>;
+  protected recommendationsData: Map<number, Recommendation>;
+  protected exportsData: Map<number, Export>;
+  protected bankrollSettingsData: BankrollSettings | undefined;
+  protected betHistoryData: Map<number, BetHistory>;
   
-  private gameId: number;
-  private recommendationId: number;
-  private exportId: number;
-  private betHistoryId: number;
+  protected gameId: number;
+  protected recommendationId: number;
+  protected exportId: number;
+  protected betHistoryId: number;
 
   constructor() {
     this.gamesData = new Map();
@@ -288,4 +291,287 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class FileStorage extends MemStorage {
+  private dataDir: string;
+  private gamesFile: string;
+  private recommendationsFile: string;
+  private exportsFile: string;
+  private bankrollFile: string;
+  private betsFile: string;
+  private countersFile: string;
+
+  constructor(dataDir: string = './data') {
+    super();
+    this.dataDir = dataDir;
+    
+    // Create data directory if it doesn't exist
+    if (!fs.existsSync(this.dataDir)) {
+      fs.mkdirSync(this.dataDir, { recursive: true });
+      log(`Created data directory: ${this.dataDir}`, 'storage');
+    }
+    
+    this.gamesFile = path.join(this.dataDir, 'games.json');
+    this.recommendationsFile = path.join(this.dataDir, 'recommendations.json');
+    this.exportsFile = path.join(this.dataDir, 'exports.json');
+    this.bankrollFile = path.join(this.dataDir, 'bankroll.json');
+    this.betsFile = path.join(this.dataDir, 'bets.json');
+    this.countersFile = path.join(this.dataDir, 'counters.json');
+    
+    // Load data from files
+    this.loadData();
+  }
+  
+  private loadData() {
+    try {
+      this.loadGames();
+      this.loadRecommendations();
+      this.loadExports();
+      this.loadBankroll();
+      this.loadBets();
+      this.loadCounters();
+      log('All data loaded successfully', 'storage');
+    } catch (error) {
+      log(`Error loading data: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  private loadGames() {
+    if (fs.existsSync(this.gamesFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.gamesFile, 'utf8'));
+        this.gamesData = new Map();
+        data.forEach((game: Game) => {
+          // Convert string dates back to Date objects
+          game.uploadDate = new Date(game.uploadDate);
+          if (game.gameTime) game.gameTime = new Date(game.gameTime);
+          this.gamesData.set(game.id, game);
+        });
+        log(`Loaded ${this.gamesData.size} games`, 'storage');
+      } catch (error) {
+        log(`Error loading games: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+      }
+    }
+  }
+  
+  private loadRecommendations() {
+    if (fs.existsSync(this.recommendationsFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.recommendationsFile, 'utf8'));
+        this.recommendationsData = new Map();
+        data.forEach((rec: Recommendation) => {
+          // Convert string dates back to Date objects
+          rec.generatedAt = new Date(rec.generatedAt);
+          this.recommendationsData.set(rec.id, rec);
+        });
+        log(`Loaded ${this.recommendationsData.size} recommendations`, 'storage');
+      } catch (error) {
+        log(`Error loading recommendations: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+      }
+    }
+  }
+  
+  private loadExports() {
+    if (fs.existsSync(this.exportsFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.exportsFile, 'utf8'));
+        this.exportsData = new Map();
+        data.forEach((exp: Export) => {
+          // Convert string dates back to Date objects
+          exp.exportDate = new Date(exp.exportDate);
+          this.exportsData.set(exp.id, exp);
+        });
+        log(`Loaded ${this.exportsData.size} exports`, 'storage');
+      } catch (error) {
+        log(`Error loading exports: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+      }
+    }
+  }
+  
+  private loadBankroll() {
+    if (fs.existsSync(this.bankrollFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.bankrollFile, 'utf8'));
+        if (data) {
+          // Convert string dates back to Date objects
+          data.createdAt = new Date(data.createdAt);
+          data.updatedAt = new Date(data.updatedAt);
+          this.bankrollSettingsData = data;
+          log('Loaded bankroll settings', 'storage');
+        }
+      } catch (error) {
+        log(`Error loading bankroll: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+      }
+    }
+  }
+  
+  private loadBets() {
+    if (fs.existsSync(this.betsFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.betsFile, 'utf8'));
+        this.betHistoryData = new Map();
+        data.forEach((bet: BetHistory) => {
+          // Convert string dates back to Date objects
+          bet.createdAt = new Date(bet.createdAt);
+          bet.updatedAt = new Date(bet.updatedAt);
+          this.betHistoryData.set(bet.id, bet);
+        });
+        log(`Loaded ${this.betHistoryData.size} bets`, 'storage');
+      } catch (error) {
+        log(`Error loading bets: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+      }
+    }
+  }
+  
+  private loadCounters() {
+    if (fs.existsSync(this.countersFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.countersFile, 'utf8'));
+        this.gameId = data.gameId || 1;
+        this.recommendationId = data.recommendationId || 1;
+        this.exportId = data.exportId || 1;
+        this.betHistoryId = data.betHistoryId || 1;
+        log('Loaded counters', 'storage');
+      } catch (error) {
+        log(`Error loading counters: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+      }
+    }
+  }
+  
+  private saveGames() {
+    try {
+      const data = Array.from(this.gamesData.values());
+      fs.writeFileSync(this.gamesFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      log(`Error saving games: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  private saveRecommendations() {
+    try {
+      const data = Array.from(this.recommendationsData.values());
+      fs.writeFileSync(this.recommendationsFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      log(`Error saving recommendations: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  private saveExports() {
+    try {
+      const data = Array.from(this.exportsData.values());
+      fs.writeFileSync(this.exportsFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      log(`Error saving exports: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  private saveBankroll() {
+    try {
+      if (this.bankrollSettingsData) {
+        fs.writeFileSync(this.bankrollFile, JSON.stringify(this.bankrollSettingsData, null, 2));
+      }
+    } catch (error) {
+      log(`Error saving bankroll: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  private saveBets() {
+    try {
+      const data = Array.from(this.betHistoryData.values());
+      fs.writeFileSync(this.betsFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      log(`Error saving bets: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  private saveCounters() {
+    try {
+      const data = {
+        gameId: this.gameId,
+        recommendationId: this.recommendationId,
+        exportId: this.exportId,
+        betHistoryId: this.betHistoryId
+      };
+      fs.writeFileSync(this.countersFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+      log(`Error saving counters: ${error instanceof Error ? error.message : String(error)}`, 'storage');
+    }
+  }
+  
+  // Override MemStorage methods to persist data
+  
+  async createGame(game: InsertGame): Promise<Game> {
+    const newGame = await super.createGame(game);
+    this.saveGames();
+    this.saveCounters();
+    return newGame;
+  }
+  
+  async clearGames(): Promise<void> {
+    await super.clearGames();
+    this.saveGames();
+    this.saveCounters();
+  }
+  
+  async createGames(gamesArray: InsertGame[]): Promise<Game[]> {
+    const newGames = await super.createGames(gamesArray);
+    this.saveGames();
+    this.saveCounters();
+    return newGames;
+  }
+  
+  async createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation> {
+    const newRecommendation = await super.createRecommendation(recommendation);
+    this.saveRecommendations();
+    this.saveCounters();
+    return newRecommendation;
+  }
+  
+  async clearRecommendations(): Promise<void> {
+    await super.clearRecommendations();
+    this.saveRecommendations();
+    this.saveCounters();
+  }
+  
+  async createRecommendations(recommendationsArray: InsertRecommendation[]): Promise<Recommendation[]> {
+    const newRecommendations = await super.createRecommendations(recommendationsArray);
+    this.saveRecommendations();
+    this.saveCounters();
+    return newRecommendations;
+  }
+  
+  async createExport(exportData: InsertExport): Promise<Export> {
+    const newExport = await super.createExport(exportData);
+    this.saveExports();
+    this.saveCounters();
+    return newExport;
+  }
+  
+  async setBankrollSettings(settings: InsertBankrollSettings): Promise<BankrollSettings> {
+    const newSettings = await super.setBankrollSettings(settings);
+    this.saveBankroll();
+    return newSettings;
+  }
+  
+  async updateBankrollAmount(newAmount: number): Promise<BankrollSettings> {
+    const updatedSettings = await super.updateBankrollAmount(newAmount);
+    this.saveBankroll();
+    return updatedSettings;
+  }
+  
+  async createBet(bet: InsertBetHistory): Promise<BetHistory> {
+    const newBet = await super.createBet(bet);
+    this.saveBets();
+    this.saveCounters();
+    return newBet;
+  }
+  
+  async updateBetResult(update: UpdateBetResult): Promise<BetHistory> {
+    const updatedBet = await super.updateBetResult(update);
+    this.saveBets();
+    this.saveBankroll();
+    return updatedBet;
+  }
+}
+
+// Use FileStorage instead of MemStorage for persistence
+export const storage = new FileStorage();

@@ -24,6 +24,7 @@ export const recommendations = pgTable("recommendations", {
   odds: text("odds").notNull(),
   confidence: integer("confidence").notNull(),
   prediction: text("prediction").notNull(),
+  analysis: text("analysis"),  // AI justification/analysis for the recommendation
   gameSource: text("game_source").default("LLM").notNull(),
   betTypeSource: text("bet_type_source").default("LLM").notNull(),
   oddsSource: text("odds_source").default("LLM").notNull(),

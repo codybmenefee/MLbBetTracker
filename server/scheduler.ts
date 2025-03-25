@@ -195,6 +195,7 @@ For each recommendation, provide:
 3. Odds (in American format)
 4. Confidence (as a percentage from 1-100%)
 5. Prediction (simple outcome like "Team A Win", "Over", "Team B Cover")
+6. Analysis (a paragraph explaining the reasoning behind your recommendation, including relevant team statistics, pitcher performance, injury reports, weather conditions, and any other factors that influenced your decision)
 
 Return your recommendations in exactly this JSON format, with no deviations:
 {
@@ -204,7 +205,8 @@ Return your recommendations in exactly this JSON format, with no deviations:
       "betType": "Moneyline",
       "odds": "+150",
       "confidence": 75,
-      "prediction": "Team A Win"
+      "prediction": "Team A Win",
+      "analysis": "Team A has won 7 of their last 10 games and their starting pitcher has a 2.1 ERA in his last 5 starts. Team B is struggling with a 3-7 record in their last 10 games and has several key players on the injury list. The favorable odds and current form make Team A a strong value bet."
     },
     ... (more recommendations)
   ]
@@ -214,9 +216,11 @@ CRITICAL REQUIREMENTS:
 - You MUST respond with valid JSON only. No explanations or text outside the JSON.
 - Your response must follow the exact format shown above.
 - "recommendations" must be an array with one object for EACH game in the data provided.
-- Each recommendation must have exactly these fields: game, betType, odds, confidence, prediction.
+- Each recommendation must have these fields: game, betType, odds, confidence, prediction, analysis.
 - "confidence" must be an integer between 1-100.
 - "odds" must include the +/- sign (e.g., "+150" or "-180").
+- "analysis" must be a detailed paragraph (100-200 words) explaining your reasoning behind the recommendation.
+- Make each analysis unique and specific to the game, not generic.
 - Do not deviate from this format in any way.
 `;
       
@@ -255,7 +259,7 @@ CRITICAL REQUIREMENTS:
         
         // Validate each recommendation structure
         for (const rec of recommendationsData.recommendations) {
-          if (!rec.game || !rec.betType || !rec.odds || rec.confidence === undefined || !rec.prediction) {
+          if (!rec.game || !rec.betType || !rec.odds || rec.confidence === undefined || !rec.prediction || !rec.analysis) {
             throw new Error("Invalid recommendation format: missing required fields");
           }
           
@@ -265,6 +269,10 @@ CRITICAL REQUIREMENTS:
           
           if (typeof rec.odds !== 'string' || !/^[+-]/.test(rec.odds)) {
             throw new Error("Invalid odds format: must be a string with +/- prefix");
+          }
+          
+          if (typeof rec.analysis !== 'string' || rec.analysis.length < 50) {
+            throw new Error("Invalid analysis: must be a detailed text explanation");
           }
         }
       } catch (err: any) {
@@ -283,6 +291,7 @@ CRITICAL REQUIREMENTS:
         odds: rec.odds,
         confidence: rec.confidence,
         prediction: rec.prediction,
+        analysis: rec.analysis || null,
         gameSource: "The Odds API",
         betTypeSource: "LLM",
         oddsSource: "The Odds API",

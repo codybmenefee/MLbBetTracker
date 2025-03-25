@@ -5,6 +5,9 @@ import {
   insertGameSchema, 
   insertRecommendationSchema, 
   insertExportSchema, 
+  insertBankrollSettingsSchema,
+  insertBetHistorySchema,
+  updateBetResultSchema,
   csvRowSchema,
   Game
 } from "@shared/schema";

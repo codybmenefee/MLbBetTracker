@@ -3,7 +3,7 @@
     "game": "New York Yankees vs. Milwaukee Brewers",
     "betType": "Moneyline",
     "odds": "-155",
-    "confidence": 68,
+    "confidence": 70,
     "prediction": "New York Yankees Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -11,7 +11,7 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 1,
-    "generatedAt": "2025-03-25T02:50:19.488Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "Toronto Blue Jays vs. Baltimore Orioles",
@@ -25,27 +25,27 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 2,
-    "generatedAt": "2025-03-25T02:50:19.488Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "Texas Rangers vs. Boston Red Sox",
-    "betType": "Moneyline",
+    "betType": "Over/Under",
     "odds": "-115",
-    "confidence": 53,
-    "prediction": "Boston Red Sox Win",
+    "confidence": 60,
+    "prediction": "Over",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
     "oddsSource": "LLM",
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 3,
-    "generatedAt": "2025-03-25T02:50:19.489Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "Washington Nationals vs. Philadelphia Phillies",
     "betType": "Moneyline",
     "odds": "-175",
-    "confidence": 72,
+    "confidence": 75,
     "prediction": "Philadelphia Phillies Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -53,13 +53,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 4,
-    "generatedAt": "2025-03-25T02:50:19.489Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "San Diego Padres vs. Atlanta Braves",
     "betType": "Moneyline",
     "odds": "-130",
-    "confidence": 61,
+    "confidence": 65,
     "prediction": "Atlanta Braves Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -67,13 +67,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 5,
-    "generatedAt": "2025-03-25T02:50:19.489Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "Chicago White Sox vs. Los Angeles Angels",
     "betType": "Moneyline",
     "odds": "-155",
-    "confidence": 66,
+    "confidence": 70,
     "prediction": "Los Angeles Angels Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -81,27 +81,27 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 6,
-    "generatedAt": "2025-03-25T02:50:19.489Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "Cincinnati Reds vs. San Francisco Giants",
-    "betType": "Run Line +1.5",
+    "betType": "Moneyline",
     "odds": "-112",
-    "confidence": 58,
-    "prediction": "Cincinnati Reds Cover",
+    "confidence": 52,
+    "prediction": "Cincinnati Reds Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
     "oddsSource": "LLM",
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 7,
-    "generatedAt": "2025-03-25T02:50:19.489Z"
+    "generatedAt": "2025-03-25T03:02:11.759Z"
   },
   {
     "game": "Kansas City Royals vs. Cleveland Guardians",
     "betType": "Moneyline",
     "odds": "-135",
-    "confidence": 64,
+    "confidence": 60,
     "prediction": "Kansas City Royals Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -109,13 +109,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 8,
-    "generatedAt": "2025-03-25T02:50:19.490Z"
+    "generatedAt": "2025-03-25T03:02:11.771Z"
   },
   {
     "game": "Houston Astros vs. New York Mets",
     "betType": "Moneyline",
     "odds": "-135",
-    "confidence": 63,
+    "confidence": 65,
     "prediction": "Houston Astros Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -123,13 +123,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 9,
-    "generatedAt": "2025-03-25T02:50:19.490Z"
+    "generatedAt": "2025-03-25T03:02:11.773Z"
   },
   {
     "game": "Miami Marlins vs. Pittsburgh Pirates",
     "betType": "Moneyline",
     "odds": "-155",
-    "confidence": 65,
+    "confidence": 68,
     "prediction": "Pittsburgh Pirates Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -137,27 +137,27 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 10,
-    "generatedAt": "2025-03-25T02:50:19.491Z"
+    "generatedAt": "2025-03-25T03:02:11.774Z"
   },
   {
     "game": "St. Louis Cardinals vs. Minnesota Twins",
-    "betType": "Moneyline",
-    "odds": "-110",
-    "confidence": 52,
-    "prediction": "Minnesota Twins Win",
+    "betType": "Over/Under",
+    "odds": "-105",
+    "confidence": 55,
+    "prediction": "Under",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
     "oddsSource": "LLM",
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 11,
-    "generatedAt": "2025-03-25T02:50:19.491Z"
+    "generatedAt": "2025-03-25T03:02:11.776Z"
   },
   {
     "game": "Los Angeles Dodgers vs. Detroit Tigers",
     "betType": "Moneyline",
     "odds": "-155",
-    "confidence": 70,
+    "confidence": 75,
     "prediction": "Los Angeles Dodgers Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -165,13 +165,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 12,
-    "generatedAt": "2025-03-25T02:50:19.492Z"
+    "generatedAt": "2025-03-25T03:02:11.777Z"
   },
   {
     "game": "Arizona Diamondbacks vs. Chicago Cubs",
     "betType": "Moneyline",
     "odds": "-142",
-    "confidence": 60,
+    "confidence": 63,
     "prediction": "Arizona Diamondbacks Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -179,13 +179,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 13,
-    "generatedAt": "2025-03-25T02:50:19.492Z"
+    "generatedAt": "2025-03-25T03:02:11.777Z"
   },
   {
     "game": "Seattle Mariners vs. Oakland Athletics",
     "betType": "Moneyline",
     "odds": "-175",
-    "confidence": 75,
+    "confidence": 80,
     "prediction": "Seattle Mariners Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -193,13 +193,13 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 14,
-    "generatedAt": "2025-03-25T02:50:19.492Z"
+    "generatedAt": "2025-03-25T03:02:11.778Z"
   },
   {
     "game": "Tampa Bay Rays vs. Colorado Rockies",
     "betType": "Moneyline",
     "odds": "-205",
-    "confidence": 80,
+    "confidence": 85,
     "prediction": "Tampa Bay Rays Win",
     "gameSource": "Manual Input",
     "betTypeSource": "LLM",
@@ -207,6 +207,6 @@
     "confidenceSource": "LLM",
     "predictionSource": "LLM",
     "id": 15,
-    "generatedAt": "2025-03-25T02:50:19.493Z"
+    "generatedAt": "2025-03-25T03:02:11.778Z"
   }
 ]

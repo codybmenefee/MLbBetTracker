@@ -1,3 +1,4 @@
+import React from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 // Schema for bet placement form
 const betFormSchema = z.object({
@@ -48,6 +50,7 @@ export default function RecommendationsPanel() {
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
   const [activeBetRecommendationId, setActiveBetRecommendationId] = useState<number | null>(null);
+  const [expandedRecommendationId, setExpandedRecommendationId] = useState<number | null>(null);
 
   const { data: recommendations, isLoading, error } = useQuery<Recommendation[]>({
     queryKey: ["/api/recommendations"],
@@ -129,6 +132,15 @@ export default function RecommendationsPanel() {
   // Handle bet form submission
   const onBetSubmit = (data: BetFormValues) => {
     addBetMutation.mutate(data);
+  };
+  
+  // Helper function to toggle expanded details for a recommendation
+  const handleToggleDetails = (recId: number) => {
+    if (expandedRecommendationId === recId) {
+      setExpandedRecommendationId(null);
+    } else {
+      setExpandedRecommendationId(recId);
+    }
   };
 
   const generateMutation = useMutation({
@@ -396,117 +408,145 @@ export default function RecommendationsPanel() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {recommendations && recommendations.map((rec: Recommendation) => (
-                    <tr key={rec.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {rec.game}
-                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.gameSource || 'LLM'}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {rec.betType}
-                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.betTypeSource || 'LLM'}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {rec.odds}
-                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.oddsSource || 'LLM'}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                          <div className={`${getConfidenceColor(rec.confidence)} h-2.5 rounded-full`} style={{ width: `${rec.confidence}%` }}></div>
-                        </div>
-                        <span className="text-xs text-gray-500 mt-1 block">{rec.confidence}%</span>
-                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.confidenceSource || 'LLM'}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {rec.prediction}
-                        <span className="text-xs text-gray-400 block mt-1">Source: {rec.predictionSource || 'LLM'}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm flex items-center space-x-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button className="text-gray-400 hover:text-gray-500">
-                                <InfoIcon className="w-5 h-5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>AI-generated prediction based on historical data and current odds</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        <Popover open={activeBetRecommendationId === rec.id} onOpenChange={(open) => {
-                          if (!open) setActiveBetRecommendationId(null);
-                        }}>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="ml-2"
-                              onClick={() => handleOpenBetForm(rec)}
-                              disabled={hasBetPlaced(rec.id)}
-                              title={hasBetPlaced(rec.id) ? "Bet already placed" : "Place a bet"}
-                            >
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              {hasBetPlaced(rec.id) ? "Bet Placed" : "Place Bet"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80">
-                            <div className="space-y-4">
-                              <h4 className="font-medium">Place a Bet</h4>
-                              <Form {...betForm}>
-                                <form onSubmit={betForm.handleSubmit(onBetSubmit)} className="space-y-4">
-                                  <FormField
-                                    control={betForm.control}
-                                    name="betAmount"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Bet Amount</FormLabel>
-                                        <FormControl>
-                                          <Input type="number" step="0.01" min="1" placeholder="10.00" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <FormField
-                                    control={betForm.control}
-                                    name="notes"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Notes (Optional)</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="Any additional notes" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <div className="flex justify-end gap-2">
-                                    <Button 
-                                      type="button" 
-                                      variant="outline" 
-                                      onClick={() => setActiveBetRecommendationId(null)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button 
-                                      type="submit"
-                                      disabled={addBetMutation.isPending}
-                                    >
-                                      {addBetMutation.isPending ? "Placing Bet..." : "Place Bet"}
-                                    </Button>
-                                  </div>
-                                </form>
-                              </Form>
+                  {recommendations && recommendations.map((rec: Recommendation) => {
+                    return (
+                      <React.Fragment key={rec.id}>
+                        <tr>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {rec.game}
+                            <span className="text-xs text-gray-400 block mt-1">Source: {rec.gameSource || 'LLM'}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {rec.betType}
+                            <span className="text-xs text-gray-400 block mt-1">Source: {rec.betTypeSource || 'LLM'}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {rec.odds}
+                            <span className="text-xs text-gray-400 block mt-1">Source: {rec.oddsSource || 'LLM'}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="w-24 bg-gray-200 rounded-full h-2.5">
+                              <div className={`${getConfidenceColor(rec.confidence)} h-2.5 rounded-full`} style={{ width: `${rec.confidence}%` }}></div>
                             </div>
-                          </PopoverContent>
-                        </Popover>
-                      </td>
-                    </tr>
-                  ))}
+                            <span className="text-xs text-gray-500 mt-1 block">{rec.confidence}%</span>
+                            <span className="text-xs text-gray-400 block mt-1">Source: {rec.confidenceSource || 'LLM'}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {rec.prediction}
+                            <span className="text-xs text-gray-400 block mt-1">Source: {rec.predictionSource || 'LLM'}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleDetails(rec.id)}
+                              title="Toggle AI Analysis"
+                              aria-label={expandedRecommendationId === rec.id ? "Hide analysis" : "Show analysis"}
+                            >
+                              {expandedRecommendationId === rec.id ? 
+                                <ChevronUp className="h-4 w-4" /> : 
+                                <ChevronDown className="h-4 w-4" />
+                              }
+                            </Button>
+                        
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className="text-gray-400 hover:text-gray-500">
+                                    <InfoIcon className="w-5 h-5" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>AI-generated prediction based on historical data and current odds</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          
+                            <Popover open={activeBetRecommendationId === rec.id} onOpenChange={(open) => {
+                              if (!open) setActiveBetRecommendationId(null);
+                            }}>
+                              <PopoverTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="ml-2"
+                                  onClick={() => handleOpenBetForm(rec)}
+                                  disabled={hasBetPlaced(rec.id)}
+                                  title={hasBetPlaced(rec.id) ? "Bet already placed" : "Place a bet"}
+                                >
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  {hasBetPlaced(rec.id) ? "Bet Placed" : "Place Bet"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80">
+                                <div className="space-y-4">
+                                  <h4 className="font-medium">Place a Bet</h4>
+                                  <Form {...betForm}>
+                                    <form onSubmit={betForm.handleSubmit(onBetSubmit)} className="space-y-4">
+                                      <FormField
+                                        control={betForm.control}
+                                        name="betAmount"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Bet Amount</FormLabel>
+                                            <FormControl>
+                                              <Input type="number" step="0.01" min="1" placeholder="10.00" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      
+                                      <FormField
+                                        control={betForm.control}
+                                        name="notes"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Notes (Optional)</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="Any additional notes" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      
+                                      <div className="flex justify-end gap-2">
+                                        <Button 
+                                          type="button" 
+                                          variant="outline" 
+                                          onClick={() => setActiveBetRecommendationId(null)}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          type="submit"
+                                          disabled={addBetMutation.isPending}
+                                        >
+                                          {addBetMutation.isPending ? "Placing Bet..." : "Place Bet"}
+                                        </Button>
+                                      </div>
+                                    </form>
+                                  </Form>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </td>
+                        </tr>
+                        
+                        {expandedRecommendationId === rec.id && (
+                          <tr className="bg-gray-50">
+                            <td colSpan={6} className="px-6 py-4">
+                              <div className="text-sm text-gray-700">
+                                <h4 className="font-medium mb-2">AI Analysis</h4>
+                                <p>{rec.analysis || "No detailed analysis available for this recommendation."}</p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

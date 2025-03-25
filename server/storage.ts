@@ -8,6 +8,7 @@ export interface IStorage {
   // Game operations
   getGames(): Promise<Game[]>;
   createGame(game: InsertGame): Promise<Game>;
+  clearGames(): Promise<void>;
   createGames(games: InsertGame[]): Promise<Game[]>;
   
   // Recommendation operations
@@ -49,10 +50,17 @@ export class MemStorage implements IStorage {
     const newGame: Game = { 
       ...game, 
       id, 
+      source: game.source || 'Manual Upload', // Ensure source is always defined
       uploadDate: new Date() 
     };
     this.gamesData.set(id, newGame);
     return newGame;
+  }
+
+  async clearGames(): Promise<void> {
+    this.gamesData.clear();
+    // Reset the ID counter to ensure clean numbering with each new batch
+    this.gameId = 1;
   }
 
   async createGames(gamesArray: InsertGame[]): Promise<Game[]> {

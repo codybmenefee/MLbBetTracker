@@ -5,20 +5,121 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { generateRecommendations } from "@/lib/openai";
 import { exportToGoogleSheet } from "@/lib/google-sheets";
 import { prepareDataForGoogleSheets } from "@/lib/clipboard-export";
-import { ArrowUpRight, InfoIcon, Clipboard, ClipboardCheck } from "lucide-react";
+import { ArrowUpRight, InfoIcon, Clipboard, ClipboardCheck, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Recommendation } from "@shared/schema";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+// Schema for bet placement form
+const betFormSchema = z.object({
+  recommendationId: z.coerce.number(),
+  date: z.string().min(1, "Date is required"),
+  game: z.string().min(1, "Game is required"),
+  betType: z.string().min(1, "Bet type is required"),
+  odds: z.string().min(1, "Odds are required"),
+  confidence: z.coerce.number().min(1).max(100, "Confidence must be between 1-100"),
+  betAmount: z.coerce.number().positive("Bet amount must be positive"),
+  predictedResult: z.string().min(1, "Predicted result is required"),
+  notes: z.string().optional(),
+});
+
+type BetFormValues = z.infer<typeof betFormSchema>;
 
 export default function RecommendationsPanel() {
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
+  const [activeBetRecommendationId, setActiveBetRecommendationId] = useState<number | null>(null);
 
   const { data: recommendations, isLoading, error } = useQuery<Recommendation[]>({
     queryKey: ["/api/recommendations"],
   });
+  
+  // Get current date in the format YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Bet form
+  const betForm = useForm<BetFormValues>({
+    resolver: zodResolver(betFormSchema),
+    defaultValues: {
+      date: today,
+      betAmount: 10,
+      notes: '',
+    }
+  });
+  
+  // Add bet mutation
+  const addBetMutation = useMutation({
+    mutationFn: async (data: BetFormValues) => {
+      return apiRequest({
+        url: "/api/bets",
+        method: "POST",
+        body: data,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bankroll"] });
+      setActiveBetRecommendationId(null);
+      toast({
+        title: "Bet placed",
+        description: "Your bet has been successfully placed.",
+      });
+      betForm.reset({
+        date: today,
+        betAmount: 10,
+        notes: '',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to place bet: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle opening bet form for a specific recommendation
+  const handleOpenBetForm = (recommendation: Recommendation) => {
+    setActiveBetRecommendationId(recommendation.id);
+    
+    // Prefill form with recommendation data
+    betForm.reset({
+      recommendationId: recommendation.id,
+      date: today,
+      game: recommendation.game,
+      betType: recommendation.betType,
+      odds: recommendation.odds,
+      confidence: recommendation.confidence,
+      betAmount: 10,
+      predictedResult: recommendation.prediction,
+      notes: '',
+    });
+  };
+  
+  // Handle bet form submission
+  const onBetSubmit = (data: BetFormValues) => {
+    addBetMutation.mutate(data);
+  };
 
   const generateMutation = useMutation({
     mutationFn: generateRecommendations,
@@ -310,7 +411,7 @@ export default function RecommendationsPanel() {
                         {rec.prediction}
                         <span className="text-xs text-gray-400 block mt-1">Source: {rec.predictionSource || 'LLM'}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm flex items-center space-x-2">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -323,6 +424,74 @@ export default function RecommendationsPanel() {
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
+                        
+                        <Popover open={activeBetRecommendationId === rec.id} onOpenChange={(open) => {
+                          if (!open) setActiveBetRecommendationId(null);
+                        }}>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="ml-2"
+                              onClick={() => handleOpenBetForm(rec)}
+                            >
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Place Bet
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80">
+                            <div className="space-y-4">
+                              <h4 className="font-medium">Place a Bet</h4>
+                              <Form {...betForm}>
+                                <form onSubmit={betForm.handleSubmit(onBetSubmit)} className="space-y-4">
+                                  <FormField
+                                    control={betForm.control}
+                                    name="betAmount"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Bet Amount</FormLabel>
+                                        <FormControl>
+                                          <Input type="number" step="0.01" min="1" placeholder="10.00" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <FormField
+                                    control={betForm.control}
+                                    name="notes"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Notes (Optional)</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Any additional notes" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <div className="flex justify-end gap-2">
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      onClick={() => setActiveBetRecommendationId(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button 
+                                      type="submit"
+                                      disabled={addBetMutation.isPending}
+                                    >
+                                      {addBetMutation.isPending ? "Placing Bet..." : "Place Bet"}
+                                    </Button>
+                                  </div>
+                                </form>
+                              </Form>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </td>
                     </tr>
                   ))}

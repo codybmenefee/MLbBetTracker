@@ -53,8 +53,18 @@ export default function RecommendationsPanel() {
     queryKey: ["/api/recommendations"],
   });
   
+  // Get bets to check which recommendations already have bets placed
+  const { data: existingBets = [] } = useQuery<any[]>({
+    queryKey: ["/api/bets"],
+  });
+  
   // Get current date in the format YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
+  
+  // Check if a recommendation already has a bet placed
+  const hasBetPlaced = (recommendationId: number): boolean => {
+    return existingBets.some((bet) => bet.recommendationId === recommendationId);
+  };
   
   // Bet form
   const betForm = useForm<BetFormValues>({
@@ -434,9 +444,11 @@ export default function RecommendationsPanel() {
                               size="sm" 
                               className="ml-2"
                               onClick={() => handleOpenBetForm(rec)}
+                              disabled={hasBetPlaced(rec.id)}
+                              title={hasBetPlaced(rec.id) ? "Bet already placed" : "Place a bet"}
                             >
                               <DollarSign className="h-4 w-4 mr-1" />
-                              Place Bet
+                              {hasBetPlaced(rec.id) ? "Bet Placed" : "Place Bet"}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-80">

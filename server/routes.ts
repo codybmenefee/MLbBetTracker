@@ -644,6 +644,167 @@ CRITICAL REQUIREMENTS:
     }
   });
 
+  // Bankroll Management Endpoints
+
+  // Get bankroll settings
+  app.get("/api/bankroll", async (req: Request, res: Response) => {
+    try {
+      const bankrollSettings = await storage.getBankrollSettings();
+      
+      if (!bankrollSettings) {
+        return res.status(404).json({ message: "Bankroll not initialized" });
+      }
+      
+      res.json(bankrollSettings);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Set or update bankroll settings
+  app.post("/api/bankroll", async (req: Request, res: Response) => {
+    try {
+      const bankrollData = req.body;
+      
+      // Validate the request data
+      const validatedData = insertBankrollSettingsSchema.parse(bankrollData);
+      
+      // Set the bankroll settings
+      const bankrollSettings = await storage.setBankrollSettings(validatedData);
+      
+      res.status(201).json(bankrollSettings);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Bet History Endpoints
+
+  // Get all bet history
+  app.get("/api/bets", async (req: Request, res: Response) => {
+    try {
+      const bets = await storage.getBetHistory();
+      res.json(bets);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Get a specific bet by ID
+  app.get("/api/bets/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid bet ID" });
+      }
+      
+      const bet = await storage.getBetById(id);
+      
+      if (!bet) {
+        return res.status(404).json({ message: "Bet not found" });
+      }
+      
+      res.json(bet);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Create a new bet
+  app.post("/api/bets", async (req: Request, res: Response) => {
+    try {
+      const betData = req.body;
+      
+      // Get bankroll settings
+      const bankrollSettings = await storage.getBankrollSettings();
+      
+      if (!bankrollSettings) {
+        return res.status(400).json({ message: "Bankroll not initialized. Set bankroll first." });
+      }
+      
+      // Get recommendation if recommendationId is provided
+      if (betData.recommendationId) {
+        const recommendation = await storage.getRecommendationById(betData.recommendationId);
+        
+        if (!recommendation) {
+          return res.status(400).json({ message: "Recommendation not found" });
+        }
+        
+        // Pre-fill data from recommendation if not provided
+        if (!betData.game) betData.game = recommendation.game;
+        if (!betData.betType) betData.betType = recommendation.betType;
+        if (!betData.odds) betData.odds = recommendation.odds;
+        if (!betData.confidence) betData.confidence = recommendation.confidence;
+        if (!betData.predictedResult) betData.predictedResult = recommendation.prediction;
+      }
+      
+      // Set default bankrollAfter if not provided
+      if (!betData.bankrollAfter) {
+        betData.bankrollAfter = bankrollSettings.currentAmount;
+      }
+      
+      // Validate the request data
+      const validatedData = insertBetHistorySchema.parse(betData);
+      
+      // Create the bet
+      const bet = await storage.createBet(validatedData);
+      
+      res.status(201).json(bet);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Update bet result
+  app.put("/api/bets/:id/result", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid bet ID" });
+      }
+      
+      const updateData = {
+        id,
+        ...req.body
+      };
+      
+      // Validate the request data
+      const validatedData = updateBetResultSchema.parse(updateData);
+      
+      // Update the bet
+      const updatedBet = await storage.updateBetResult(validatedData);
+      
+      res.json(updatedBet);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Get bets for a specific recommendation
+  app.get("/api/recommendations/:id/bets", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid recommendation ID" });
+      }
+      
+      const recommendation = await storage.getRecommendationById(id);
+      
+      if (!recommendation) {
+        return res.status(404).json({ message: "Recommendation not found" });
+      }
+      
+      const bets = await storage.getBetsByRecommendationId(id);
+      
+      res.json(bets);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

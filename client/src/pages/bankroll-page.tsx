@@ -552,18 +552,63 @@ export default function BankrollPage() {
                   </TableHeader>
                   <TableBody>
                     {betsQuery.data?.map((bet) => (
-                      <TableRow key={bet.id}>
-                        <TableCell>{new Date(bet.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{bet.game}</TableCell>
-                        <TableCell>{bet.betType}</TableCell>
-                        <TableCell>{bet.odds}</TableCell>
-                        <TableCell>{formatCurrency(bet.betAmount)}</TableCell>
-                        <TableCell>{getResultBadge(bet.actualResult)}</TableCell>
-                        <TableCell className={bet.profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {formatCurrency(bet.profitLoss)}
-                        </TableCell>
-                        <TableCell>{formatCurrency(bet.bankrollAfter)}</TableCell>
-                      </TableRow>
+                      <React.Fragment key={bet.id}>
+                        <TableRow>
+                          <TableCell>{new Date(bet.date).toLocaleDateString()}</TableCell>
+                          <TableCell>{bet.game}</TableCell>
+                          <TableCell>{bet.betType}</TableCell>
+                          <TableCell>{bet.odds}</TableCell>
+                          <TableCell>{formatCurrency(bet.betAmount)}</TableCell>
+                          <TableCell>{getResultBadge(bet.actualResult)}</TableCell>
+                          <TableCell className={bet.profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {formatCurrency(bet.profitLoss)}
+                          </TableCell>
+                          <TableCell>{formatCurrency(bet.bankrollAfter)}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleUpdateResult(bet.id)}
+                              >
+                                Update Result
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditBet(bet.id)}
+                              >
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleToggleDetails(bet.id)}
+                              >
+                                {expandedBetId === bet.id ? 
+                                  <ChevronUp className="h-4 w-4" /> : 
+                                  <ChevronDown className="h-4 w-4" />
+                                }
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {expandedBetId === bet.id && bet.recommendationId && (
+                          <TableRow>
+                            <TableCell colSpan={9} className="bg-slate-50 dark:bg-slate-900">
+                              <div className="p-4">
+                                <h4 className="font-semibold mb-2">AI Analysis & Prediction Justification</h4>
+                                {recommendationsQuery.data && (
+                                  <div>
+                                    {recommendationsQuery.data.find(r => r.id === bet.recommendationId)?.analysis || 
+                                     "No analysis available for this bet."}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>

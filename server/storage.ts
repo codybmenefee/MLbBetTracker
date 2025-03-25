@@ -244,7 +244,7 @@ export class MemStorage implements IStorage {
     // Update the bet details without changing the result or calculating profit/loss
     const updatedBet: BetHistory = {
       ...bet,
-      date: new Date(update.date),
+      date: update.date,
       game: update.game,
       betType: update.betType,
       odds: update.odds,
@@ -588,6 +588,12 @@ export class FileStorage extends MemStorage {
     this.saveBets();
     this.saveCounters();
     return newBet;
+  }
+  
+  async updateBet(update: UpdateBet): Promise<BetHistory> {
+    const updatedBet = await super.updateBet(update);
+    this.saveBets();
+    return updatedBet;
   }
   
   async updateBetResult(update: UpdateBetResult): Promise<BetHistory> {

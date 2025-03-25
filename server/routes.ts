@@ -8,6 +8,7 @@ import {
   insertBankrollSettingsSchema,
   insertBetHistorySchema,
   updateBetResultSchema,
+  updateBetSchema,
   csvRowSchema,
   Game
 } from "@shared/schema";
@@ -787,6 +788,32 @@ CRITICAL REQUIREMENTS:
       
       // Update the bet
       const updatedBet = await storage.updateBetResult(validatedData);
+      
+      res.json(updatedBet);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  // Update bet details
+  app.put("/api/bets/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid bet ID" });
+      }
+      
+      const updateData = {
+        id,
+        ...req.body
+      };
+      
+      // Validate the request data
+      const validatedData = updateBetSchema.parse(updateData);
+      
+      // Update the bet
+      const updatedBet = await storage.updateBet(validatedData);
       
       res.json(updatedBet);
     } catch (err) {

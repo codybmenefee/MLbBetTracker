@@ -79,11 +79,25 @@ export class MemStorage implements IStorage {
 
   async createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation> {
     const id = this.recommendationId++;
+    // Create a new object with defaults for required fields
+    const recWithDefaults = {
+      // First copy all fields from the input recommendation
+      ...recommendation,
+      // Then ensure required fields have defaults
+      gameSource: 'Manual Input',
+      betTypeSource: 'LLM',
+      oddsSource: 'LLM',
+      confidenceSource: 'LLM',
+      predictionSource: 'LLM'
+    };
+    
+    // Now create the final Recommendation with the provided values plus defaults
     const newRecommendation: Recommendation = { 
-      ...recommendation, 
-      id, 
+      ...recWithDefaults,
+      id,
       generatedAt: new Date() 
     };
+    
     this.recommendationsData.set(id, newRecommendation);
     return newRecommendation;
   }

@@ -411,6 +411,9 @@ Chicago Cubs,St. Louis Cardinals,2025-03-23 20:15,+110,-130,9.0,-110`;
     try {
       const apiKey = process.env.ODDS_API_KEY as string;
       
+      // Clear existing games before storing new ones
+      await storage.clearGames();
+      
       // Store new games from The Odds API
       const storeGamesFunction = async (games: any[]) => {
         // Validate each game in the array and ensure dates are properly formatted

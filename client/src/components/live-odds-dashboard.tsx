@@ -163,7 +163,7 @@ export default function LiveOddsDashboard() {
           <CardTitle className="text-lg">Today's MLB Games</CardTitle>
           <CardDescription>
             {hasGames
-              ? `Showing ${games.length} MLB games scheduled for today`
+              ? `Showing all ${games.length} MLB games scheduled for today with live odds`
               : "No games data available. Click the button below to fetch today's games."}
           </CardDescription>
         </CardHeader>
@@ -186,7 +186,7 @@ export default function LiveOddsDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {games.slice(0, 5).map((game) => (
+                  {games.map((game) => (
                     <TableRow key={game.id}>
                       <TableCell className="font-medium">
                         {game.awayTeam} @ {game.homeTeam}
@@ -220,12 +220,6 @@ export default function LiveOddsDashboard() {
                   ))}
                 </TableBody>
               </Table>
-              
-              {games.length > 5 && (
-                <div className="mt-4 text-center text-sm text-gray-500">
-                  Showing 5 of {games.length} games. {games.length - 5} more games available.
-                </div>
-              )}
             </div>
           ) : (
             <Alert>

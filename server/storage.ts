@@ -40,6 +40,7 @@ export interface IStorage {
   createBet(bet: InsertBetHistory): Promise<BetHistory>;
   updateBet(update: UpdateBet): Promise<BetHistory>;
   updateBetResult(update: UpdateBetResult): Promise<BetHistory>;
+  deleteBet(id: number): Promise<boolean>;
   getBetsByRecommendationId(recommendationId: number): Promise<BetHistory[]>;
 }
 
@@ -314,6 +315,28 @@ export class MemStorage implements IStorage {
     return Array.from(this.betHistoryData.values())
       .filter(bet => bet.recommendationId === recommendationId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async deleteBet(id: number): Promise<boolean> {
+    const bet = this.betHistoryData.get(id);
+    if (!bet) {
+      return false;
+    }
+    
+    // If the bet was not pending, adjust the bankroll back
+    if (bet.actualResult !== "pending") {
+      // Get current bankroll settings
+      const bankrollSettings = await this.getBankrollSettings();
+      if (bankrollSettings) {
+        // Calculate new bankroll by reversing the bet's effect
+        const newBankrollAmount = bankrollSettings.currentAmount - bet.profitLoss;
+        // Update bankroll
+        await this.updateBankrollAmount(newBankrollAmount);
+      }
+    }
+    
+    // Delete the bet
+    return this.betHistoryData.delete(id);
   }
 }
 
@@ -602,6 +625,15 @@ export class FileStorage extends MemStorage {
     this.saveBets();
     this.saveBankroll();
     return updatedBet;
+  }
+  
+  async deleteBet(id: number): Promise<boolean> {
+    const result = await super.deleteBet(id);
+    if (result) {
+      this.saveBets();
+      this.saveBankroll();
+    }
+    return result;
   }
 }
 

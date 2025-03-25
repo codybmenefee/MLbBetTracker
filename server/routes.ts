@@ -820,6 +820,34 @@ CRITICAL REQUIREMENTS:
       handleError(err, res);
     }
   });
+  
+  // Delete a bet
+  app.delete("/api/bets/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid bet ID" });
+      }
+      
+      // Check if bet exists
+      const bet = await storage.getBetById(id);
+      if (!bet) {
+        return res.status(404).json({ message: "Bet not found" });
+      }
+      
+      // Delete the bet
+      const success = await storage.deleteBet(id);
+      
+      if (success) {
+        res.status(200).json({ message: "Bet successfully deleted" });
+      } else {
+        res.status(500).json({ message: "Failed to delete bet" });
+      }
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   // Get bets for a specific recommendation
   app.get("/api/recommendations/:id/bets", async (req: Request, res: Response) => {

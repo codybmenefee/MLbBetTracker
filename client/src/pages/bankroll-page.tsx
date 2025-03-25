@@ -324,6 +324,13 @@ export default function BankrollPage() {
     }
   };
   
+  // Helper function to handle deleting a bet
+  const handleDeleteBet = (betId: number) => {
+    if (confirm("Are you sure you want to delete this bet? This action cannot be undone.")) {
+      deleteBetMutation.mutate(betId);
+    }
+  };
+  
   // Edit bet mutation
   const editBetMutation = useMutation({
     mutationFn: async (data: BetFormValues & { id: number }) => {
@@ -355,6 +362,31 @@ export default function BankrollPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to update bet details.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Delete bet mutation
+  const deleteBetMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest({
+        url: `/api/bets/${id}`,
+        method: "DELETE"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bankroll"] });
+      toast({
+        title: "Bet deleted",
+        description: "The bet has been successfully deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete bet.",
         variant: "destructive",
       });
     },
@@ -588,13 +620,22 @@ export default function BankrollPage() {
                           <TableCell>{bet.predictedResult}</TableCell>
                           <TableCell>{getResultBadge(bet.actualResult)}</TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleUpdateResult(bet.id)}
-                            >
-                              Update Result
-                            </Button>
+                            <div className="flex gap-2 justify-end">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleUpdateResult(bet.id)}
+                              >
+                                Update Result
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleDeleteBet(bet.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -670,6 +711,13 @@ export default function BankrollPage() {
                                   <ChevronUp className="h-4 w-4" /> : 
                                   <ChevronDown className="h-4 w-4" />
                                 }
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleDeleteBet(bet.id)}
+                              >
+                                Delete
                               </Button>
                             </div>
                           </TableCell>

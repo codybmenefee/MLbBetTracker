@@ -73,6 +73,7 @@ export default function SettingsPage() {
     nextScheduledRefresh: string | null;
   }>({
     queryKey: ["/api/scheduler"],
+    refetchOnWindowFocus: false,
   });
   
   // Update the form when data is loaded
@@ -483,7 +484,99 @@ function testWithSampleData() {
     <div className="container py-10">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
       
-      <div className="w-full max-w-2xl mx-auto">
+      <div className="w-full max-w-2xl mx-auto space-y-6">
+        {/* Automatic Data Refresh Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="mr-2 h-5 w-5" /> Automatic Data Refresh
+            </CardTitle>
+            <CardDescription>
+              Configure automatic daily refresh of game data and betting recommendations
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            {schedulerQuery.isLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+              </div>
+            ) : (
+              <>
+                <Alert className="mb-6">
+                  <div className="flex">
+                    <InfoIcon className="h-5 w-5 mr-2" />
+                    <AlertDescription>
+                      The application will automatically refresh MLB game data and generate new betting recommendations 
+                      daily at the specified time. All times are in Eastern Time (ET).
+                    </AlertDescription>
+                  </div>
+                </Alert>
+                
+                <Form {...schedulerForm}>
+                  <form onSubmit={schedulerForm.handleSubmit(onSchedulerSubmit)} className="space-y-4">
+                    <FormField
+                      control={schedulerForm.control}
+                      name="refreshTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Daily Refresh Time (ET)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="07:00" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Enter time in 24-hour format (HH:MM). Default is 7:00 AM ET.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex items-center gap-4">
+                      <Button type="submit" disabled={updateSchedulerMutation.isPending}>
+                        {updateSchedulerMutation.isPending ? (
+                          <>
+                            <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                            Updating...
+                          </>
+                        ) : (
+                          <>Save Settings</>
+                        )}
+                      </Button>
+                      
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleManualRefresh}
+                        disabled={isManualRefreshLoading}
+                      >
+                        {isManualRefreshLoading ? (
+                          <>
+                            <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                            Refreshing...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Refresh Now
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+                
+                {schedulerQuery.data?.nextScheduledRefresh && (
+                  <p className="text-sm text-muted-foreground mt-6">
+                    Next scheduled refresh: {new Date(schedulerQuery.data.nextScheduledRefresh).toLocaleString()}
+                  </p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Google Apps Script Integration Card */}
         <Card>
           <CardHeader>
             <CardTitle>Google Apps Script Integration</CardTitle>

@@ -211,6 +211,53 @@ export class MemStorage implements IStorage {
     return this.bankrollSettingsData;
   }
   
+  // Store for backup of bankroll settings
+  protected bankrollBackup: BankrollSettings | undefined = undefined;
+  
+  async resetBankroll(initialAmount: number): Promise<BankrollSettings> {
+    // Backup current settings before reset
+    await this.backupBankrollSettings();
+    
+    // Create new bankroll settings
+    const now = new Date();
+    this.bankrollSettingsData = {
+      id: 1,
+      initialAmount: initialAmount,
+      currentAmount: initialAmount,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    return this.bankrollSettingsData;
+  }
+  
+  async backupBankrollSettings(): Promise<BankrollSettings | undefined> {
+    if (!this.bankrollSettingsData) {
+      return undefined;
+    }
+    
+    // Create deep copy of current settings
+    this.bankrollBackup = { ...this.bankrollSettingsData };
+    return this.bankrollBackup;
+  }
+  
+  async restoreBankrollSettings(): Promise<BankrollSettings | undefined> {
+    if (!this.bankrollBackup) {
+      return undefined;
+    }
+    
+    // Restore from backup
+    this.bankrollSettingsData = { 
+      ...this.bankrollBackup,
+      updatedAt: new Date() 
+    };
+    
+    // Clear backup after restore
+    this.bankrollBackup = undefined;
+    
+    return this.bankrollSettingsData;
+  }
+  
   // Bet history operations
   async getBetHistory(): Promise<BetHistory[]> {
     return Array.from(this.betHistoryData.values())
@@ -608,6 +655,26 @@ export class FileStorage extends MemStorage {
     const updatedSettings = await super.updateBankrollAmount(newAmount);
     this.saveBankroll();
     return updatedSettings;
+  }
+  
+  async resetBankroll(initialAmount: number): Promise<BankrollSettings> {
+    const resetSettings = await super.resetBankroll(initialAmount);
+    this.saveBankroll();
+    return resetSettings;
+  }
+  
+  async backupBankrollSettings(): Promise<BankrollSettings | undefined> {
+    const backup = await super.backupBankrollSettings();
+    // We don't need to save the backup to disk since it's temporary
+    return backup;
+  }
+  
+  async restoreBankrollSettings(): Promise<BankrollSettings | undefined> {
+    const restored = await super.restoreBankrollSettings();
+    if (restored) {
+      this.saveBankroll();
+    }
+    return restored;
   }
   
   async createBet(bet: InsertBetHistory): Promise<BetHistory> {

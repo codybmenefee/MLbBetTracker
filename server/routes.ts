@@ -690,6 +690,62 @@ CRITICAL REQUIREMENTS:
       handleError(err, res);
     }
   });
+  
+  // Reset bankroll (create a backup first)
+  app.post("/api/bankroll/reset", async (req: Request, res: Response) => {
+    try {
+      const { initialAmount } = req.body;
+      
+      // Validate the initial amount
+      if (typeof initialAmount !== 'number' || initialAmount <= 0) {
+        return res.status(400).json({ message: "Initial amount must be a positive number" });
+      }
+      
+      // Reset the bankroll
+      const bankrollSettings = await storage.resetBankroll(initialAmount);
+      
+      res.status(200).json(bankrollSettings);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  // Restore bankroll from backup
+  app.post("/api/bankroll/restore", async (req: Request, res: Response) => {
+    try {
+      // Restore the bankroll from backup
+      const bankrollSettings = await storage.restoreBankrollSettings();
+      
+      if (!bankrollSettings) {
+        return res.status(404).json({ message: "No backup found to restore" });
+      }
+      
+      res.status(200).json(bankrollSettings);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+  
+  // Export bankroll and bet history as CSV
+  app.get("/api/bankroll/export", async (req: Request, res: Response) => {
+    try {
+      const bankrollSettings = await storage.getBankrollSettings();
+      
+      if (!bankrollSettings) {
+        return res.status(404).json({ message: "Bankroll settings not found" });
+      }
+      
+      const bets = await storage.getBetHistory();
+      
+      // Create CSV content (this will be handled on the client side)
+      res.status(200).json({ 
+        bankroll: bankrollSettings,
+        bets: bets 
+      });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   // Bet History Endpoints
 

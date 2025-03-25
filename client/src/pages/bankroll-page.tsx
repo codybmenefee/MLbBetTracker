@@ -38,6 +38,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,8 +61,12 @@ import {
   TrendingDown,
   ChevronDown,
   ChevronUp,
-  BarChart3
+  BarChart3,
+  Download,
+  RefreshCw,
+  RotateCcw
 } from "lucide-react";
+import { exportBankrollAndBetsToCSV } from "@/lib/bankroll-export";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,6 +119,8 @@ export default function BankrollPage() {
   const [isUpdateResultDialogOpen, setIsUpdateResultDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
   const [expandedBetId, setExpandedBetId] = useState<number | null>(null);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [newInitialAmount, setNewInitialAmount] = useState(500);
 
   // Fetch bankroll settings
   const bankrollQuery = useQuery({
@@ -391,6 +408,81 @@ export default function BankrollPage() {
       });
     },
   });
+  
+  // Reset bankroll mutation
+  const resetBankrollMutation = useMutation({
+    mutationFn: async (initialAmount: number) => {
+      return apiRequest({
+        url: "/api/bankroll/reset",
+        method: "POST",
+        body: { initialAmount }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bankroll"] });
+      setIsResetDialogOpen(false);
+      toast({
+        title: "Bankroll reset",
+        description: "Your bankroll has been reset. A backup was created in case you need to restore it.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset bankroll.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Restore bankroll mutation
+  const restoreBankrollMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest({
+        url: "/api/bankroll/restore",
+        method: "POST"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bankroll"] });
+      toast({
+        title: "Bankroll restored",
+        description: "Your previous bankroll settings have been restored.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to restore bankroll. No backup may exist.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Export bankroll and bets handler
+  const handleExportData = () => {
+    if (bankrollQuery.data && betsQuery.data) {
+      try {
+        exportBankrollAndBetsToCSV(bankrollQuery.data, betsQuery.data);
+        toast({
+          title: "Export successful",
+          description: "Your bankroll and betting data has been exported to a CSV file.",
+        });
+      } catch (error) {
+        toast({
+          title: "Export failed",
+          description: "Failed to export data to CSV.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Export failed",
+        description: "No data available to export.",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Handle edit bet form submission
   const onEditBetSubmit = (data: BetFormValues) => {

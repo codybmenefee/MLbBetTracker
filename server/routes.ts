@@ -48,10 +48,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload games via CSV (parsed on the frontend)
+  // Upload games via CSV (parsed on the frontend) or a single game
   app.post("/api/games", async (req: Request, res: Response) => {
     try {
-      const parsedGames = req.body;
+      // Check if we're dealing with a single game or an array of games
+      const parsedGames = Array.isArray(req.body) ? req.body : [req.body];
       const validatedGames = [];
 
       // Validate each game in the array and ensure dates are properly formatted
@@ -80,8 +81,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedGames.push(validatedData);
       }
 
-      const savedGames = await storage.createGames(validatedGames);
-      res.status(201).json(savedGames);
+      // If we're uploading a CSV file (multiple games), clear existing games first
+      let result;
+      if (Array.isArray(req.body) && req.body.length > 1) {
+        await storage.clearGames();
+        result = await storage.createGames(validatedGames);
+      } else {
+        // For a single game, just add it without clearing
+        result = await storage.createGame(validatedGames[0]);
+      }
+      
+      res.status(201).json(result);
     } catch (err) {
       handleError(err, res);
     }

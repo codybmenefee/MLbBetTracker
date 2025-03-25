@@ -1,0 +1,14 @@
+[
+  {
+    "homeTeam": "New York Yankees",
+    "awayTeam": "Boston Red Sox",
+    "gameTime": "2025-03-27T18:00:00.000Z",
+    "homeOdds": "-130",
+    "awayOdds": "+110",
+    "overUnderLine": "8.5",
+    "overUnderOdds": "-110",
+    "source": "Test Data",
+    "id": 1,
+    "uploadDate": "2025-03-25T02:48:07.275Z"
+  }
+]

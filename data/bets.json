@@ -1,0 +1,19 @@
+[
+  {
+    "recommendationId": 1,
+    "date": "2025-03-25",
+    "game": "New York Yankees vs. Boston Red Sox",
+    "betType": "Moneyline",
+    "odds": "-130",
+    "confidence": 70,
+    "betAmount": 50,
+    "predictedResult": "New York Yankees Win",
+    "bankrollAfter": 950,
+    "id": 1,
+    "createdAt": "2025-03-25T02:48:23.110Z",
+    "updatedAt": "2025-03-25T02:48:23.110Z",
+    "notes": null,
+    "actualResult": "pending",
+    "profitLoss": 0
+  }
+]

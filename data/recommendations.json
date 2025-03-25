@@ -1,0 +1,30 @@
+[
+  {
+    "game": "New York Yankees vs. Boston Red Sox",
+    "betType": "Moneyline",
+    "odds": "-130",
+    "confidence": 70,
+    "prediction": "New York Yankees Win",
+    "gameSource": "Manual Input",
+    "betTypeSource": "LLM",
+    "oddsSource": "LLM",
+    "confidenceSource": "LLM",
+    "predictionSource": "LLM",
+    "id": 1,
+    "generatedAt": "2025-03-25T02:48:18.496Z"
+  },
+  {
+    "game": "New York Yankees vs. Boston Red Sox",
+    "betType": "Over/Under",
+    "odds": "-110",
+    "confidence": 65,
+    "prediction": "Over",
+    "gameSource": "Manual Input",
+    "betTypeSource": "LLM",
+    "oddsSource": "LLM",
+    "confidenceSource": "LLM",
+    "predictionSource": "LLM",
+    "id": 2,
+    "generatedAt": "2025-03-25T02:48:18.497Z"
+  }
+]

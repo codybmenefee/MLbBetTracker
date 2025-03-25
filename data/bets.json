@@ -15,39 +15,5 @@
     "notes": null,
     "actualResult": "loss",
     "profitLoss": -50
-  },
-  {
-    "recommendationId": 2,
-    "date": "2025-03-25",
-    "game": "Toronto Blue Jays vs. Baltimore Orioles",
-    "betType": "Moneyline",
-    "odds": "-115",
-    "confidence": 55,
-    "betAmount": 10,
-    "predictedResult": "Baltimore Orioles Win",
-    "bankrollAfter": 964.4099378881987,
-    "notes": null,
-    "id": 2,
-    "createdAt": "2025-03-25T02:50:42.074Z",
-    "updatedAt": "2025-03-25T02:51:06.640Z",
-    "actualResult": "win",
-    "profitLoss": 8.695652173913043
-  },
-  {
-    "recommendationId": 4,
-    "date": "2025-03-25",
-    "game": "Washington Nationals vs. Philadelphia Phillies",
-    "betType": "Moneyline",
-    "odds": "-175",
-    "confidence": 72,
-    "betAmount": 10,
-    "predictedResult": "Philadelphia Phillies Win",
-    "bankrollAfter": 955.7142857142857,
-    "notes": null,
-    "id": 3,
-    "createdAt": "2025-03-25T02:50:44.649Z",
-    "updatedAt": "2025-03-25T02:51:02.670Z",
-    "actualResult": "win",
-    "profitLoss": 5.7142857142857135
   }
 ]

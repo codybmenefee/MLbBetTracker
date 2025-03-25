@@ -3,13 +3,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { showGoogleAppsScriptSetupGuide, isValidGoogleAppsScriptUrl } from "@/lib/google-apps-script";
-import { InfoIcon, Copy, CheckCircle2 } from "lucide-react";
+import { InfoIcon, Copy, CheckCircle2, Clock, ArrowRight, RefreshCw } from "lucide-react";
 
 // Validation schema for Google Apps Script configuration
 const appsScriptFormSchema = z.object({
@@ -30,12 +33,21 @@ const appsScriptFormSchema = z.object({
     .optional(),
 });
 
+// Validation schema for scheduler settings
+const schedulerFormSchema = z.object({
+  refreshTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Must be in 24-hour format (HH:MM)")
+});
+
 type AppsScriptFormValues = z.infer<typeof appsScriptFormSchema>;
+type SchedulerFormValues = z.infer<typeof schedulerFormSchema>;
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [savedScriptSettings, setSavedScriptSettings] = useState<{url: string, spreadsheetId?: string} | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isManualRefreshLoading, setIsManualRefreshLoading] = useState(false);
 
   // Form for Google Apps Script configuration
   const scriptForm = useForm<AppsScriptFormValues>({
@@ -43,6 +55,83 @@ export default function SettingsPage() {
     defaultValues: {
       googleAppsScriptUrl: "",
       googleSpreadsheetId: "",
+    },
+  });
+  
+  // Form for scheduler settings
+  const schedulerForm = useForm<SchedulerFormValues>({
+    resolver: zodResolver(schedulerFormSchema),
+    defaultValues: {
+      refreshTime: "07:00", // Default to 7:00 AM
+    },
+  });
+  
+  // Fetch current scheduler settings
+  const schedulerQuery = useQuery<{
+    refreshTime: string;
+    timeZone: string;
+    nextScheduledRefresh: string | null;
+  }>({
+    queryKey: ["/api/scheduler"],
+  });
+  
+  // Update the form when data is loaded
+  useEffect(() => {
+    if (schedulerQuery.data) {
+      schedulerForm.reset({
+        refreshTime: schedulerQuery.data.refreshTime || "07:00",
+      });
+    }
+  }, [schedulerQuery.data, schedulerForm]);
+  
+  // Mutation to update scheduler settings
+  const updateSchedulerMutation = useMutation({
+    mutationFn: async (data: SchedulerFormValues) => {
+      return await apiRequest({
+        url: "/api/scheduler/refresh-time",
+        method: "POST",
+        body: data,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Scheduler Updated",
+        description: "Daily refresh time has been updated.",
+      });
+      schedulerQuery.refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update scheduler settings.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation to manually trigger a refresh
+  const triggerRefreshMutation = useMutation({
+    mutationFn: async () => {
+      setIsManualRefreshLoading(true);
+      return await apiRequest({
+        url: "/api/scheduler/trigger",
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Refresh Triggered",
+        description: "Manual refresh has been triggered. This may take a moment to complete.",
+      });
+      setIsManualRefreshLoading(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to trigger manual refresh.",
+        variant: "destructive",
+      });
+      setIsManualRefreshLoading(false);
     },
   });
 
@@ -378,6 +467,16 @@ function testWithSampleData() {
     setTimeout(() => {
       setCopied(false);
     }, 3000);
+  };
+  
+  // Handler for scheduler form submission
+  const onSchedulerSubmit = (data: SchedulerFormValues) => {
+    updateSchedulerMutation.mutate(data);
+  };
+  
+  // Handler for manual refresh
+  const handleManualRefresh = () => {
+    triggerRefreshMutation.mutate();
   };
 
   return (

@@ -574,6 +574,73 @@ CRITICAL REQUIREMENTS:
     }
   });
 
+  // Scheduler Endpoints
+
+  // Get current scheduler settings
+  app.get("/api/scheduler", async (req: Request, res: Response) => {
+    try {
+      const refreshTime = scheduler.getRefreshTime();
+      const nextRefresh = scheduler.getNextScheduledRefresh();
+      
+      res.json({
+        refreshTime: refreshTime.time,
+        timeZone: refreshTime.timeZone,
+        nextScheduledRefresh: nextRefresh ? nextRefresh.toISOString() : null
+      });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Update refresh time
+  app.post("/api/scheduler/refresh-time", async (req: Request, res: Response) => {
+    try {
+      const { refreshTime } = req.body;
+      
+      if (!refreshTime || typeof refreshTime !== 'string') {
+        return res.status(400).json({ message: "Refresh time is required in format HH:MM" });
+      }
+      
+      const success = scheduler.setRefreshTime(refreshTime);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Invalid refresh time format. Please use HH:MM (24-hour format)" });
+      }
+      
+      // Get the updated settings to return in the response
+      const settings = scheduler.getRefreshTime();
+      const nextRefresh = scheduler.getNextScheduledRefresh();
+      
+      res.json({
+        message: "Refresh time updated successfully",
+        refreshTime: settings.time,
+        timeZone: settings.timeZone,
+        nextScheduledRefresh: nextRefresh ? nextRefresh.toISOString() : null
+      });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Manually trigger refresh
+  app.post("/api/scheduler/trigger", requireOddsApiKey, async (req: Request, res: Response) => {
+    try {
+      res.status(202).json({ message: "Refresh triggered. This will happen in the background." });
+      
+      // Trigger refresh after sending response
+      setTimeout(async () => {
+        try {
+          await scheduler.manualRefresh();
+          console.log('[Scheduler] Manual refresh completed successfully');
+        } catch (error) {
+          console.error('[Scheduler] Manual refresh failed:', error);
+        }
+      }, 100);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -669,6 +669,73 @@ export default function BankrollPage() {
         </Card>
       </div>
 
+      <div className="flex justify-end gap-4 my-4">
+        <Button
+          variant="outline"
+          onClick={handleExportData}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Export to CSV
+        </Button>
+        
+        <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset Bankroll
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Bankroll?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will reset your bankroll to a new starting amount. A backup will be created
+                that can be restored if needed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+              <Label htmlFor="new-initial-amount">New Initial Amount</Label>
+              <div className="relative mt-2">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+                <Input
+                  id="new-initial-amount"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  className="pl-8"
+                  value={newInitialAmount}
+                  onChange={(e) => setNewInitialAmount(parseFloat(e.target.value))}
+                  placeholder="Enter new initial amount"
+                />
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => resetBankrollMutation.mutate(newInitialAmount)}
+                disabled={resetBankrollMutation.isPending || !newInitialAmount || newInitialAmount <= 0}
+              >
+                {resetBankrollMutation.isPending ? "Resetting..." : "Reset Bankroll"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        <Button
+          variant="ghost"
+          onClick={() => restoreBankrollMutation.mutate()}
+          disabled={restoreBankrollMutation.isPending}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Restore Previous
+        </Button>
+      </div>
+
       <Tabs defaultValue="active">
         <TabsList>
           <TabsTrigger value="active">Active & Pending Bets</TabsTrigger>

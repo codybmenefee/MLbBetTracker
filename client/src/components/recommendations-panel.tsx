@@ -197,12 +197,6 @@ export default function RecommendationsPanel() {
             <h2 className="text-2xl font-semibold text-neutral">AI Recommendations</h2>
             <p className="text-gray-600">Top 5 betting opportunities for today</p>
           </div>
-          <Button 
-            onClick={handleGenerateRecommendations}
-            disabled={generateMutation.isPending}
-          >
-            Generate Recommendations
-          </Button>
         </div>
         
         <Card className="bg-red-50 border-red-200">
@@ -214,12 +208,9 @@ export default function RecommendationsPanel() {
             <p className="text-gray-700 mb-4">
               {error instanceof Error ? error.message : "An unknown error occurred while loading recommendations."}
             </p>
-            <Button 
-              onClick={handleGenerateRecommendations}
-              disabled={generateMutation.isPending}
-            >
-              Try Again
-            </Button>
+            <p className="text-gray-600 mb-4">
+              Use the refresh button in the sidebar to try again.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -278,13 +269,7 @@ export default function RecommendationsPanel() {
         <CardContent className="p-0">
           {!recommendations || recommendations.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-gray-500 mb-4">No recommendations available. Generate recommendations to get started.</p>
-              <Button 
-                onClick={handleGenerateRecommendations}
-                disabled={generateMutation.isPending}
-              >
-                Generate Recommendations
-              </Button>
+              <p className="text-gray-500 mb-4">No recommendations available. Use the refresh button in the sidebar to fetch games and generate recommendations.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
